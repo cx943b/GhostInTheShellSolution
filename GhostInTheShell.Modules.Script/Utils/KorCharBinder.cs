@@ -1,6 +1,6 @@
-﻿namespace GhostInTheShell.Modules.Script
+﻿namespace GhostInTheShell.Modules.Script.Utils
 {
-    internal sealed class KorCharParser
+    internal sealed class KorCharBinder
     {
         const string korInitConsonant = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
         const string korMedialConsonant = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ";
@@ -9,10 +9,10 @@
         const ushort uniKorStartIndex = 0xAC00;
         const ushort uniKorEndIndex = 0xD79F;
 
-        static readonly KorCharParser _Instance = new KorCharParser();
-        public static KorCharParser Instance => _Instance;
+        static readonly KorCharBinder _Instance = new KorCharBinder();
+        public static KorCharBinder Instance => _Instance;
 
-        private KorCharParser() { }
+        private KorCharBinder() { }
 
         public char BindChars(char chInit, char chMedial, char chFinal = ' ')
         {
@@ -33,7 +33,7 @@
         }
         public char[]? UnbindChar(char chKor)
         {
-            if (chKor < uniKorStartIndex && chKor > uniKorEndIndex)
+            if (chKor < uniKorStartIndex || chKor > uniKorEndIndex)
                 return null;
 
             int korIndex = chKor - uniKorStartIndex;
@@ -44,7 +44,10 @@
             int medialIndex = korIndex / 28;
             korIndex %= 28;
 
-            return new char[] { korInitConsonant[initIndex], korMedialConsonant[medialIndex], korFinalConsonant[korIndex] };
+            if (korIndex > 0)
+                return new char[] { korInitConsonant[initIndex], korMedialConsonant[medialIndex], korFinalConsonant[korIndex] };
+            else
+                return new char[] { korInitConsonant[initIndex], korMedialConsonant[medialIndex] };
         }
     }
 }
