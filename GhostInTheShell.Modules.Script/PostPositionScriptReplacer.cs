@@ -6,7 +6,7 @@ namespace GhostInTheShell.Modules.Script
     public sealed class PostPositionScriptReplacer : ScriptReplacerBase
     {
         public PostPositionScriptReplacer()
-            : base($"\\\\p\\[\\s*(.+?)\\s*;\\s*(.+?)\\s*\\]")
+            : base("\\\\p\\[\\s*(.+?)\\s*;\\s*(.+?)\\s*\\]")
         {
 
         }

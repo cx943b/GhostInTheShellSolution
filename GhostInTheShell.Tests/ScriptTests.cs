@@ -14,6 +14,23 @@ namespace GhostInTheShell.Tests
     public class ScriptTests
     {
         [TestMethod]
+        public void Parse()
+        {
+            const string script = "\\t[0]이쁜 여자\\p[은;는] 흔하지만\\w[1000] \\t[1]이쁜 남자\\p[은;는] 귀하다구";
+
+            ScriptService scriptSvc = new ScriptService(LoggerMockFactory.CreateLogger<ScriptService>());
+            scriptSvc.PrintWordsScriptCommandRequested += ScriptSvc_PrintWordsScriptCommandRequested;
+            scriptSvc.BeginExecute(script);
+
+            Thread.Sleep(2000);
+        }
+
+        private void ScriptSvc_PrintWordsScriptCommandRequested(object sender, PrintWordsScriptCommandEventArgs e)
+        {
+            Debug.Write(e.PrintWords);
+        }
+
+        [TestMethod]
         public void UnbindKorChar()
         {
             KorCharBinder kcBinder = KorCharBinder.Instance;
