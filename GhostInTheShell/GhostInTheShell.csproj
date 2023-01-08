@@ -15,4 +15,9 @@
     <PackageReference Include="Prism.Unity" Version="8.1.97" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\GhostInTheShell.Modules.InfraStructure\GhostInTheShell.Modules.InfraStructure.csproj" />
+    <ProjectReference Include="..\GhostInTheShell.Modules.Script\GhostInTheShell.Modules.Script.csproj" />
+  </ItemGroup>
+
 </Project>
