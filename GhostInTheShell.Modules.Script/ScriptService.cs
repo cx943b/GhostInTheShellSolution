@@ -14,9 +14,7 @@ namespace GhostInTheShell.Modules.Script
         void Execute(string script, bool isAsync = true);
     }
 
-    
-
-    public sealed class ScriptService
+    public sealed class ScriptService : IScriptService
     {
         readonly ILogger<ScriptService> _logger;
 
