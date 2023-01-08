@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Prism.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,46 +12,71 @@ namespace GhostInTheShell.Modules.Script
 {
     public interface IScriptService
     {
-        void Execute(string script, bool isAsync = true);
+        bool IsRunning { get; }
+        int ScriptCommandPumpInterval { get; }
+
+        bool ChangeScriptCommandPumpInterval(int interval);
+        void Execute(string script);
     }
 
     public sealed class ScriptService : IScriptService
     {
         readonly ILogger<ScriptService> _logger;
 
+        readonly ClearWordsScriptCommandEvent _clearWordsScriptCommandEvent;
+        readonly PrintWordScriptCommandEvent _printWordScriptCommandEvent;
+        readonly TalkerChangeScriptCommandEvent _talkerChangeScriptCommandEvent;
+        readonly ScriptExecuteCompletedEvent _scriptExecuteCompletedEvent;
+
         readonly PostPositionScriptReplacer _ppScriptReplacer = new PostPositionScriptReplacer();
         readonly Queue<ScriptCommandBase> _quParsedScriptCommand = new Queue<ScriptCommandBase>();
 
-        public int ScriptCommandProcessInterval { get; private set; } = 30;
+        public bool IsRunning { get; private set; }
+        public int ScriptCommandPumpInterval { get; private set; } = 30;
 
-
-        public event PrintWordsScriptCommandEventHandler? PrintWordsScriptCommandRequested;
-
-
-
-        public ScriptService(ILogger<ScriptService> logger)
+        public ScriptService(ILogger<ScriptService> logger, IEventAggregator eventAggregator)
         {
             _logger = logger;
+
+            _clearWordsScriptCommandEvent = eventAggregator.GetEvent<ClearWordsScriptCommandEvent>();
+            _printWordScriptCommandEvent = eventAggregator.GetEvent<PrintWordScriptCommandEvent>();
+            _talkerChangeScriptCommandEvent = eventAggregator.GetEvent<TalkerChangeScriptCommandEvent>();
+            _scriptExecuteCompletedEvent = eventAggregator.GetEvent<ScriptExecuteCompletedEvent>();
         }
 
-        public void Execute(string script, bool isAsync = true)
+        public bool ChangeScriptCommandPumpInterval(int interval)
+        {
+            if (IsRunning)
+                return false;
+
+            if(interval <= 0) throw new ArgumentOutOfRangeException(nameof(interval));
+
+            ScriptCommandPumpInterval = interval;
+            return true;
+        }
+
+        public void Execute(string script)
         {
             string postPositionReplacedScript = _ppScriptReplacer.Replace(script);
             bool isScriptQueueReady = parseScript(postPositionReplacedScript);
 
             if(isScriptQueueReady)
-            {
-                if(isAsync)
-                    Task.Run(isAsync ? beginPumpScriptQueue : pumpScriptQueue);
-            }
+                Task.Run(pumpScriptQueue);
         }
 
-        private void beginPumpScriptQueue()
+        private void pumpScriptQueue()
         {
-            while(_quParsedScriptCommand.TryDequeue(out ScriptCommandBase? scriptCmd))
+            IsRunning = true;
+
+            while (_quParsedScriptCommand.TryDequeue(out ScriptCommandBase? scriptCmd))
             {
                 switch(scriptCmd)
                 {
+                    case ClearWordsScriptCommand:
+                        {
+                            _clearWordsScriptCommandEvent.Publish();
+                            break;
+                        }
                     case WaitScriptCommand waitScriptCmd:
                         {
                             Thread.Sleep(waitScriptCmd.Interval);
@@ -58,48 +84,23 @@ namespace GhostInTheShell.Modules.Script
                         }
                     case TalkerChangeScriptCommand talkerChangeScriptCmd:
                         {
-                            // Raise TalkerChangeEvent
+                            _talkerChangeScriptCommandEvent.Publish(new TalkerChangeScriptCommandEventArgs(talkerChangeScriptCmd.TalkerIndex));
                             break;
                         }
                     case PrintWordScriptCommand printWordScriptCmd:
                         {
-                            Task.Run(() => PrintWordsScriptCommandRequested?.Invoke(this, new PrintWordsScriptCommandEventArgs(printWordScriptCmd.Word)));
-                            
+                            _printWordScriptCommandEvent.Publish(new PrintWordScriptCommandEventArgs(printWordScriptCmd.Word));                            
                             break;
                         }
 
                 }
 
-                Thread.Sleep(ScriptCommandProcessInterval);
+                Thread.Sleep(ScriptCommandPumpInterval);
             }
-        }
-        private void pumpScriptQueue()
-        {
-            while (_quParsedScriptCommand.TryDequeue(out ScriptCommandBase? scriptCmd))
-            {
-                switch (scriptCmd)
-                {
-                    case WaitScriptCommand waitScriptCmd:
-                        {
-                            Thread.Sleep(waitScriptCmd.Interval);
-                            break;
-                        }
-                    case TalkerChangeScriptCommand talkerChangeScriptCmd:
-                        {
-                            // Raise TalkerChangeEvent
-                            break;
-                        }
-                    case PrintWordScriptCommand printWordScriptCmd:
-                        {
-                            PrintWordsScriptCommandRequested?.Invoke(this, new PrintWordsScriptCommandEventArgs(printWordScriptCmd.Word));
 
-                            break;
-                        }
+            IsRunning = false;
 
-                }
-
-                Thread.Sleep(ScriptCommandProcessInterval);
-            }
+            _scriptExecuteCompletedEvent.Publish();
         }
 
         private bool parseScript(string script)
