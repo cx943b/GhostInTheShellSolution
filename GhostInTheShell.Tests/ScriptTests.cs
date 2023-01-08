@@ -1,5 +1,6 @@
 ﻿using GhostInTheShell.Modules.Script;
 using GhostInTheShell.Modules.Script.Utils;
+using Prism.Events;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,16 +19,13 @@ namespace GhostInTheShell.Tests
         {
             const string script = "\\t[0]이쁜 여자\\p[은;는] 흔하지만\\w[1000] \\t[1]이쁜 남자\\p[은;는] 귀하다구";
 
-            ScriptService scriptSvc = new ScriptService(LoggerMockFactory.CreateLogger<ScriptService>());
-            scriptSvc.PrintWordsScriptCommandRequested += ScriptSvc_PrintWordsScriptCommandRequested;
-            scriptSvc.BeginExecute(script);
+            EventAggregator eventAggregator = new EventAggregator();
+            eventAggregator.GetEvent<PrintWordScriptCommandEvent>().Subscribe(e => Debug.Write(e.PrintWord));
+
+            ScriptService scriptSvc = new ScriptService(LoggerMockFactory.CreateLogger<ScriptService>(), eventAggregator);
+            scriptSvc.Execute(script);
 
             Thread.Sleep(2000);
-        }
-
-        private void ScriptSvc_PrintWordsScriptCommandRequested(object sender, PrintWordsScriptCommandEventArgs e)
-        {
-            Debug.Write(e.PrintWords);
         }
 
         [TestMethod]
