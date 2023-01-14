@@ -1,7 +1,9 @@
-﻿using GhostInTheShell.Modules.Shell.Models;
+﻿using GhostInTheShell.Modules.InfraStructure;
+using GhostInTheShell.Modules.Shell.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
@@ -14,6 +16,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Documents;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace GhostInTheShell.Modules.Shell
 {
@@ -38,6 +41,8 @@ namespace GhostInTheShell.Modules.Shell
 
     public abstract class ShellModelFactoryBase : IShellModelFactory
     {
+        object _initLock = new object();
+
         protected readonly ILogger _logger;
         protected readonly IConfiguration _Config;
         protected readonly HttpClient _Client;
@@ -71,79 +76,52 @@ namespace GhostInTheShell.Modules.Shell
         }
         public async Task<bool> InitializeAsync(string shellName)
         {
-            IDictionary<ShellModelType, XmlReader>? dicTable = await ReadTableDataAsync(shellName);
-            if (dicTable == null)
+            if (String.IsNullOrEmpty(shellName))
+            {
+                _logger.Log(LogLevel.Critical, new ArgumentNullException(nameof(shellName)), "Invalid ShellName");
                 return false;
+            }
 
             try
             {
-                IEnumerable<HairModel> hairModels = InitializeHair(shellName);
-                if (hairModels == null)
-                    throw new XmlException("Hair info NotFound");
-
-                _dicPartModels.Add(ShellPartType.BackHair, hairModels.Where(model => model.Position == HairPosition.Back).ToArray());
-                _dicPartModels.Add(ShellPartType.FrontHair, hairModels.Where(model => model.Position == HairPosition.Front).ToArray());
-                _dicPartModels.Add(ShellPartType.Head, InitializeHead(dicTable[ShellModelType.Head]));
-                _dicPartModels.Add(ShellPartType.Face, InitializeFace(dicTable[ShellModelType.Face]));
-                _dicPartModels.Add(ShellPartType.Eye, InitializeEye(dicTable[ShellModelType.Eye]));
-                _dicPartModels.Add(ShellPartType.Accessory, InitializeAccessory(dicTable[ShellModelType.Accessory]));
-                _dicPartModels.Add(ShellPartType.Cloth, InitializeCloth(dicTable[ShellModelType.Cloth]));
-                _dicPartModels.Add(ShellPartType.Underwear, InitializeUnderwear(dicTable[ShellModelType.Underwear]));
-
-                _dicPartLabels.Add(ShellPartType.AttachHair, _dicPartModels[ShellPartType.Accessory].Cast<AccessoryModel>().Where(model => String.Compare(model.TypeEn, "AttachHair", true) == 0).Select(model => model.Label).ToArray());
-                _dicPartLabels.Add(ShellPartType.AttachHead, _dicPartModels[ShellPartType.Accessory].Cast<AccessoryModel>().Where(model => String.Compare(model.TypeEn, "AttachHead", true) == 0).Select(model => model.Label).ToArray());
-                _dicPartLabels.Add(ShellPartType.Glasses, _dicPartModels[ShellPartType.Accessory].Cast<AccessoryModel>().Where(model => String.Compare(model.TypeEn, "Glasses", true) == 0).Select(model => model.Label).Prepend("None").ToArray());
-                _dicPartLabels.Add(ShellPartType.Shoes, _dicPartModels[ShellPartType.Accessory].Cast<AccessoryModel>().Where(model => String.Compare(model.TypeEn, "Shoes", true) == 0).Select(model => model.Label).Prepend("None").ToArray());
-                _dicPartLabels.Add(ShellPartType.ShoesEx, _dicPartModels[ShellPartType.Accessory].Cast<AccessoryModel>().Where(model => String.Compare(model.TypeEn, "ShoesEx", true) == 0).Select(model => model.Label).Prepend("None").ToArray());
-                _dicPartLabels.Add(ShellPartType.Stocking, _dicPartModels[ShellPartType.Accessory].Cast<AccessoryModel>().Where(model => String.Compare(model.TypeEn, "Stocking", true) == 0).Select(model => model.Label).Prepend("None").ToArray());
-                _dicPartLabels.Add(ShellPartType.Socks, _dicPartModels[ShellPartType.Accessory].Cast<AccessoryModel>().Where(model => String.Compare(model.TypeEn, "Socks", true) == 0).Select(model => model.Label).Prepend("None").ToArray());
-                _dicPartLabels.Add(ShellPartType.Etc, _dicPartModels[ShellPartType.Accessory].Cast<AccessoryModel>().Where(model => String.Compare(model.TypeEn, "Etc", true) == 0).Select(model => model.Label).ToArray());
-
-                _dicPartLabels.Add(ShellPartType.BackHair, _dicPartModels[ShellPartType.BackHair].Cast<HairModel>().Select(model => model.Label).ToArray());
-                _dicPartLabels.Add(ShellPartType.FrontHair, _dicPartModels[ShellPartType.FrontHair].Cast<HairModel>().Select(model => model.Label).ToArray());
-                _dicPartLabels.Add(ShellPartType.Cloth, _dicPartModels[ShellPartType.Cloth].Select(model => model.Label).ToArray());
-                _dicPartLabels.Add(ShellPartType.Eye, _dicPartModels[ShellPartType.Eye].Select(model => model.Label).ToArray());
-                _dicPartLabels.Add(ShellPartType.Face, _dicPartModels[ShellPartType.Face].Select(model => model.Label).Distinct().ToArray());
-                _dicPartLabels.Add(ShellPartType.Head, _dicPartModels[ShellPartType.Head].Select(model => model.Label).ToArray());
-                _dicPartLabels.Add(ShellPartType.Underwear, _dicPartModels[ShellPartType.Underwear].Select(model => model.Label).ToArray());
-
-                ShellName = shellName;
-
-                return true;
-            }
-            catch (XmlException xmlEx)
-            {
-                _logger.LogError(xmlEx.Message, "ShellModelFactory", "Initialize");
-                return false;
-            }
-            catch (ArgumentException argEx)
-            {
-                _logger.LogError(argEx.Message, "ShellModelFactory", "Initialize");
-                return false;
-            }
-            finally
-            {
-                if (dicTable != null)
+                Task<bool>[] initTasks = new Task<bool>[]
                 {
-                    foreach (var xmlReader in dicTable.Values)
-                        xmlReader.Dispose();
-                }
+                    InitializeAccessoriesAsync(shellName),
+                    InitializeClothsAsync(shellName),
+                    InitializeEyesAsync(shellName),
+                    InitializeFacesAsync(shellName),
+                    InitializeHairsAsync(shellName),
+                    InitializeHeadsAsync(shellName),
+                    InitializeUnderwearsAsync(shellName)
+                };
+                //await InitializeAccessoriesAsync(shellName);
+                //await InitializeClothsAsync(shellName);
+                //await InitializeEyesAsync(shellName);
+                //await InitializeFacesAsync(shellName);
+                //await InitializeHairsAsync(shellName);
+                //await InitializeHeadsAsync(shellName);
+                //await InitializeUnderwearsAsync(shellName);
+
+                bool[] initResults = await Task.WhenAll(initTasks);
+                bool isModelsReady = initResults.All(r => true);
+                if(isModelsReady)
+                    ShellName = shellName;
+
+                return isModelsReady;
+            }
+            catch(Exception ex)
+            {
+                _logger.Log( LogLevel.Critical, ex.Message, "ShellModelFactoryInitialize-Fail");
+                return false;
             }
         }
 
-
-        protected abstract Task<Stream?> ReadTableDataAsync(ShellModelType modelType, string shellName);
-
-
         #region Initialize
-        /// <exception cref="ArgumentNullException"/>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="XmlException"/>
-        public async Task<IEnumerable<HairModel>?> InitializeHair(string shellName)
+        public async Task<bool> InitializeHairsAsync(string shellName)
         {
             Stream? tableStream = await ReadTableDataAsync(ShellModelType.Hair, shellName);
             if (tableStream is null)
-                return null;
+                return false;
 
             XmlReader xmlReader = createTableReader(tableStream);
 
@@ -152,15 +130,280 @@ namespace GhostInTheShell.Modules.Shell
                 XmlDocument xDoc = new XmlDocument();
                 xDoc.Load(xmlReader);
 
-                return xDoc.DocumentElement!.ChildNodes
+                IEnumerable<HairModel>? hairModels = xDoc.DocumentElement?.ChildNodes
                     .Cast<XmlNode>()
                     .SelectMany(CreateHairModels)
                     .ToArray();
+
+                if (hairModels is null)
+                    return false;
+
+                var backHairs = hairModels.Where(model => model.Position == HairPosition.Back).ToArray();
+                var frontHairs = hairModels.Where(model => model.Position == HairPosition.Front).ToArray();
+
+                lock(_initLock)
+                {
+                    _dicPartModels.Add(ShellPartType.BackHair, backHairs);
+                    _dicPartModels.Add(ShellPartType.FrontHair, frontHairs);
+
+                    _dicPartLabels.Add(ShellPartType.BackHair, backHairs.Cast<HairModel>().Select(model => model.Label).ToArray());
+                    _dicPartLabels.Add(ShellPartType.FrontHair, frontHairs.Cast<HairModel>().Select(model => model.Label).ToArray());
+                }
+
+                return true;
             }
             catch(Exception ex)
             {
-                _logger.Log(LogLevel.Critical, ex, "InitializeHair-Fail");
-                return null;
+                _logger.Log(LogLevel.Critical, ex, "InitializeHairs-Fail");
+                return false;
+            }
+            finally
+            {
+                xmlReader.Dispose();
+                tableStream.Dispose();
+            }
+        }
+        public async Task<bool> InitializeHeadsAsync(string shellName)
+        {
+            Stream? tableStream = await ReadTableDataAsync(ShellModelType.Head, shellName);
+            if (tableStream is null)
+                return false;
+
+            XmlReader xmlReader = createTableReader(tableStream);
+
+            try
+            {
+                XmlDocument xDoc = new XmlDocument();
+                xDoc.Load(xmlReader);
+
+                var headModels = xDoc.DocumentElement?.ChildNodes
+                    .Cast<XmlNode>()
+                    .Select(CreateHeadModels)
+                    .ToArray();
+
+                if (headModels is null)
+                    return false;
+
+                lock(_initLock)
+                {
+                    _dicPartModels.Add(ShellPartType.Head, headModels);
+                    _dicPartLabels.Add(ShellPartType.Head, headModels.Select(model => model.Label).ToArray());
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Critical, ex, "InitializeHeads-Fail");
+                return false;
+            }
+            finally
+            {
+                xmlReader.Dispose();
+                tableStream.Dispose();
+            }
+        }
+        public async Task<bool> InitializeFacesAsync(string shellName)
+        {
+            Stream? tableStream = await ReadTableDataAsync(ShellModelType.Face, shellName);
+            if (tableStream is null)
+                return false;
+
+            XmlReader xmlReader = createTableReader(tableStream);
+
+            try
+            {
+                XmlDocument xDoc = new XmlDocument();
+                xDoc.Load(xmlReader);
+
+                var faceModels = xDoc.DocumentElement?.ChildNodes
+                    .Cast<XmlNode>()
+                    .SelectMany(CreateFaceModels)
+                    .ToArray();
+
+                if (faceModels is null)
+                    return false;
+
+                lock (_initLock)
+                {
+                    _dicPartModels.Add(ShellPartType.Face, faceModels);
+                    _dicPartLabels.Add(ShellPartType.Face, faceModels.Select(model => model.Label).Distinct().ToArray());
+                }   
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Critical, ex, "InitializeFaces-Fail");
+                return false;
+            }
+            finally
+            {
+                xmlReader.Dispose();
+                tableStream.Dispose();
+            }
+        }
+        public async Task<bool> InitializeEyesAsync(string shellName)
+        {
+            Stream? tableStream = await ReadTableDataAsync(ShellModelType.Eye, shellName);
+            if (tableStream is null)
+                return false;
+
+            XmlReader xmlReader = createTableReader(tableStream);
+
+            try
+            {
+                XmlDocument xDoc = new XmlDocument();
+                xDoc.Load(xmlReader);
+
+                var eyeModels = xDoc.DocumentElement?.ChildNodes
+                    .Cast<XmlNode>()
+                    .SelectMany(CreateEyeModels)
+                    .ToArray();
+
+                if (eyeModels is null)
+                    return false;
+
+                lock (_initLock)
+                {
+                    _dicPartModels.Add(ShellPartType.Eye, eyeModels);
+                    _dicPartLabels.Add(ShellPartType.Eye, eyeModels.Select(model => model.Label).ToArray());
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Critical, ex, "InitializeEyes-Fail");
+                return false;
+            }
+            finally
+            {
+                xmlReader.Dispose();
+                tableStream.Dispose();
+            }
+        }
+        public async Task<bool> InitializeAccessoriesAsync(string shellName)
+        {
+            Stream? tableStream = await ReadTableDataAsync(ShellModelType.Accessory, shellName);
+            if (tableStream is null)
+                return false;
+
+            XmlReader xmlReader = createTableReader(tableStream);
+
+            try
+            {
+                XmlDocument xDoc = new XmlDocument();
+                xDoc.Load(xmlReader);
+
+                var accessoryModels = xDoc.DocumentElement?.ChildNodes
+                    .Cast<XmlNode>()
+                    .SelectMany(CreateAccessories)
+                    .ToArray();
+
+                if (accessoryModels is null)
+                    return false;
+
+                lock (_initLock)
+                {
+                    _dicPartModels.Add(ShellPartType.Accessory, accessoryModels);
+
+                    _dicPartLabels.Add(ShellPartType.AttachHair, accessoryModels.Where(model => String.Compare(model.TypeEn, nameof(ShellPartType.AttachHair), true) == 0).Select(model => model.Label).ToArray());
+                    _dicPartLabels.Add(ShellPartType.AttachHead, accessoryModels.Where(model => String.Compare(model.TypeEn, nameof(ShellPartType.AttachHead), true) == 0).Select(model => model.Label).ToArray());
+                    _dicPartLabels.Add(ShellPartType.Glasses, accessoryModels.Where(model => String.Compare(model.TypeEn, nameof(ShellPartType.Glasses), true) == 0).Select(model => model.Label).Prepend("None").ToArray());
+                    _dicPartLabels.Add(ShellPartType.Shoes, accessoryModels.Where(model => String.Compare(model.TypeEn, nameof(ShellPartType.Shoes), true) == 0).Select(model => model.Label).Prepend("None").ToArray());
+                    _dicPartLabels.Add(ShellPartType.ShoesEx, accessoryModels.Where(model => String.Compare(model.TypeEn, nameof(ShellPartType.ShoesEx), true) == 0).Select(model => model.Label).Prepend("None").ToArray());
+                    _dicPartLabels.Add(ShellPartType.Stocking, accessoryModels.Where(model => String.Compare(model.TypeEn, nameof(ShellPartType.Stocking), true) == 0).Select(model => model.Label).Prepend("None").ToArray());
+                    _dicPartLabels.Add(ShellPartType.Socks, accessoryModels.Where(model => String.Compare(model.TypeEn, nameof(ShellPartType.Socks), true) == 0).Select(model => model.Label).Prepend("None").ToArray());
+                    _dicPartLabels.Add(ShellPartType.Etc, accessoryModels.Where(model => String.Compare(model.TypeEn, nameof(ShellPartType.Etc), true) == 0).Select(model => model.Label).ToArray());
+                }   
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Critical, ex, "InitializeAccessories-Fail");
+                return false;
+            }
+            finally
+            {
+                xmlReader.Dispose();
+                tableStream.Dispose();
+            }
+        }
+        public async Task<bool> InitializeClothsAsync(string shellName)
+        {
+            Stream? tableStream = await ReadTableDataAsync(ShellModelType.Cloth, shellName);
+            if (tableStream is null)
+                return false;
+
+            XmlReader xmlReader = createTableReader(tableStream);
+
+            try
+            {
+                XmlDocument xDoc = new XmlDocument();
+                xDoc.Load(xmlReader);
+
+                var clothModels = xDoc.DocumentElement?.ChildNodes
+                    .Cast<XmlNode>()
+                    .Select(CreateClothModel)
+                    .ToArray();
+
+                if (clothModels is null)
+                    return false;
+
+                lock (_initLock)
+                {
+                    _dicPartModels.Add(ShellPartType.Cloth, clothModels);
+                    _dicPartLabels.Add(ShellPartType.Cloth, clothModels.Select(model => model.Label).ToArray());
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Critical, ex, "InitializeCloths-Fail");
+                return false;
+            }
+            finally
+            {
+                xmlReader.Dispose();
+                tableStream.Dispose();
+            }
+        }
+        public async Task<bool> InitializeUnderwearsAsync(string shellName)
+        {
+            Stream? tableStream = await ReadTableDataAsync(ShellModelType.Underwear, shellName);
+            if (tableStream is null)
+                return false;
+
+            XmlReader xmlReader = createTableReader(tableStream);
+
+            try
+            {
+                XmlDocument xDoc = new XmlDocument();
+                xDoc.Load(xmlReader);
+
+                var underwearModels = xDoc.DocumentElement?.ChildNodes
+                    .Cast<XmlNode>()
+                    .Select(CreateUnderwearModel)
+                    .ToArray();
+
+                if (underwearModels is null)
+                    return false;
+
+                lock (_initLock)
+                {
+                    _dicPartModels.Add(ShellPartType.Underwear, underwearModels);
+                    _dicPartLabels.Add(ShellPartType.Underwear, underwearModels.Select(model => model.Label).ToArray());
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Critical, ex, "InitializeHairs-Fail");
+                return false;
             }
             finally
             {
@@ -169,12 +412,25 @@ namespace GhostInTheShell.Modules.Shell
             }
         }
 
-        protected IEnumerable<HairModel> CreateHairModels(XmlNode hairsNode)
+
+
+
+        protected abstract Task<Stream?> ReadTableDataAsync(ShellModelType modelType, string shellName);
+
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="XmlException"></exception>
+        protected virtual IEnumerable<HairModel> CreateHairModels(XmlNode hairsNode)
         {
             if (hairsNode is null)
                 throw new ArgumentNullException(nameof(hairsNode));
+            if (hairsNode.Attributes is null)
+                throw new NullReferenceException("HairsNode.Attributes");
 
-            HairPosition hairPos = (HairPosition)Enum.Parse(typeof(HairPosition), hairsNode.Attributes?["Type"]?.Value ?? throw new XmlException("NotFound HairNode.Type"));
+            string sHairPosition = hairsNode.Attributes["Type"]?.Value ?? throw new NullReferenceException("NotFound HairsNode.Type");
+            if (!Enum.TryParse(sHairPosition, out HairPosition hairPos))
+                throw new ArgumentException("InvalidValue.HairPoition");
+
             MaterialID[] normalIds = null!;
             MaterialID[] colorIds = null!;
 
@@ -195,94 +451,93 @@ namespace GhostInTheShell.Modules.Shell
             {
                 if (hairNode is null)
                     throw new ArgumentNullException(nameof(hairNode));
+                if (hairNode.Attributes is null)
+                    throw new NullReferenceException("HairNode.Attributes");
 
-                string hairLabel = hairsNode.Attributes?["Label"]?.Value ?? throw new XmlException("NotFound HairNode.Label");
-                string hairFileName = hairNode.Attributes?["FileName"]?.Value ?? throw new XmlException("NotFound HairNode.FileName");
+                string hairLabel = hairNode.Attributes["Label"]?.Value ?? throw new NullReferenceException("NotFound HairNode.Label");
+                string hairFileName = hairNode.Attributes["FileName"]?.Value ?? throw new NullReferenceException("NotFound HairNode.FileName");
 
                 return new HairModel(hairLabel, hairFileName, normalIds, colorIds, hairPos);
             }
         }
 
-
-        /// <exception cref="ArgumentNullException"/>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="XmlException"/>
-        protected virtual HeadModel[] InitializeHead(XmlReader xmlReader)
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="NullReferenceException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        protected virtual HeadModel CreateHeadModels(XmlNode headNode)
         {
-            new ArgumentNullException("InitializeHead: headTable");
+            if (headNode is null)
+                throw new ArgumentNullException(nameof(headNode));
+            if (headNode.Attributes is null)
+                throw new NullReferenceException("HeadNode.Attributes");
 
-            XmlDocument xDoc = new XmlDocument();
-            xDoc.Load(xmlReader);
+            string headLabel = headNode.Attributes["Label"]?.Value ?? throw new NullReferenceException("NotFound HeadNode.Label");
+            string headFileName = headNode.Attributes["FileName"]?.Value ?? throw new NullReferenceException("NotFound HeadNode.FileName");
+            string sHeadType = headNode.Attributes["Type"]?.Value ?? throw new NullReferenceException("NotFound HeadNode.Type");
 
-            XmlElement rootEle = xDoc.DocumentElement;
-            return rootEle.ChildNodes
-                .Cast<XmlNode>()
-                .Select(headNode =>
-                {
-                    return new HeadModel(
-                        headNode.Attributes["Label"].Value, headNode.Attributes["FileName"].Value,
-                        new MaterialID[] { MaterialID.head }, null, (HeadType)Enum.Parse(typeof(HeadType), headNode.Attributes["Type"].Value));
+            if (!Enum.TryParse(sHeadType, out HeadType headType))
+                throw new ArgumentException("Invalid HeadTypeString");
 
-                }).ToArray();
+            MaterialID[] normalIds = new MaterialID[] { MaterialID.head };
+
+            return new HeadModel(headLabel, headFileName, normalIds, null, headType);
         }
-        /// <exception cref="ArgumentNullException"/>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="XmlException"/>
-        protected virtual FaceModel[] InitializeFace(XmlReader xmlReader)
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="XmlException"></exception>
+        protected virtual IEnumerable<FaceModel> CreateFaceModels(XmlNode faceNode)
         {
-            XmlDocument xDoc = new XmlDocument();
-            xDoc.Load(xmlReader);
+            if (faceNode is null)
+                throw new ArgumentNullException(nameof(faceNode));
+            if (faceNode.Attributes is null)
+                throw new NullReferenceException("FaceNode.Attributes");
 
-            XmlElement rootEle = xDoc.DocumentElement;
-            MaterialID[] faceNormalID = new MaterialID[] { MaterialID.face_back, MaterialID.face_front };
-            MaterialID[] faceColorID = new MaterialID[] { MaterialID.face_haircolor };
+            MaterialID[] normalID = new MaterialID[] { MaterialID.face_back, MaterialID.face_front };
+            MaterialID[] colorID = new MaterialID[] { MaterialID.face_haircolor };
 
-            return rootEle.ChildNodes
-                .Cast<XmlNode>()
-                .SelectMany(node =>
-                {
-                    string label = node.Attributes["Label"]?.Value;
-                    IEnumerable<string> fileNames = node.Attributes["FileName"]?.Value.Split(',').Select(name => name.Trim());
+            string faceLabel = faceNode.Attributes["Label"]?.Value ?? throw new NullReferenceException("NotFound FaceNode.Label");
+            string sFaceFileNames = faceNode.Attributes["FileName"]?.Value ?? throw new NullReferenceException("NotFound FaceNode.FileNames");
 
-                    return fileNames.Select(fileName => new FaceModel(label, fileName, faceNormalID, faceColorID));
-                }).ToArray();
+            IEnumerable<string> faceFileNames = sFaceFileNames.Split(',').Select(name => name.Trim());
+            return faceFileNames.Select(fileName => new FaceModel(faceLabel, fileName, normalID, colorID)).ToArray();
         }
-        /// <exception cref="ArgumentNullException"/>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="XmlException"/>
-        protected virtual EyeModel[] InitializeEye(XmlReader xmlReader)
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="XmlException"></exception>
+        protected virtual IEnumerable<EyeModel> CreateEyeModels(XmlNode eyeNode)
         {
-            XmlDocument xDoc = new XmlDocument();
-            xDoc.Load(xmlReader);
+            if (eyeNode is null)
+                throw new ArgumentNullException(nameof(eyeNode));
+            if (eyeNode.Attributes is null)
+                throw new NullReferenceException("EyeNode.Attributes");
 
-            XmlElement rootEle = xDoc.DocumentElement;
-            MaterialID[] eyeNormalID = new MaterialID[] { MaterialID.eye };
-            MaterialID[] eyeColorID = new MaterialID[] { MaterialID.eye_color };
+            MaterialID[] normalID = new MaterialID[] { MaterialID.eye };
+            MaterialID[] colorID = new MaterialID[] { MaterialID.eye_color };
 
-            return rootEle.ChildNodes
-                .Cast<XmlNode>()
-                .SelectMany(node =>
-                {
-                    string label = node.Attributes["Label"]?.Value;
-                    IEnumerable<string> fileNames = node.Attributes["FileName"]?.Value.Split(',').Select(name => name.Trim());
+            string eyeLabel = eyeNode.Attributes?["Label"]?.Value ?? throw new NullReferenceException("NotFound EyeNode.Label");
+            string sEyeFileNames = eyeNode.Attributes?["FileName"]?.Value ?? throw new NullReferenceException("NotFound EyeNode.FileNames");
 
-                    return fileNames.Select(fileName => new EyeModel(label, fileName, eyeNormalID, eyeColorID));
-                }).ToArray();
+            IEnumerable<string> eyeFileNames = sEyeFileNames.Split(',').Select(name => name.Trim());
+            return eyeFileNames.Select(fileName => new EyeModel(eyeLabel, fileName, normalID, colorID)).ToArray();
         }
-        /// <exception cref="ArgumentNullException"/>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="XmlException"/>
-        protected virtual AccessoryModel[] InitializeAccessory(XmlReader xmlReader)
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="XmlException"></exception>
+        protected virtual IEnumerable<AccessoryModel> CreateAccessories(XmlNode accessoriesNode)
         {
-            XmlReaderSettings xrSetting = new XmlReaderSettings();
-            xrSetting.IgnoreComments = true;
+            if (accessoriesNode is null)
+                throw new ArgumentNullException(nameof(accessoriesNode));
+            if (accessoriesNode.Attributes is null)
+                throw new NullReferenceException("AccessoriesNode.Attributes");
 
-            XmlDocument xDoc = new XmlDocument();
-            xDoc.Load(xmlReader);
+            string typeEn = accessoriesNode.Attributes["TypeEn"]?.Value ?? throw new NullReferenceException("NotFound AccessoriesNode.TypeEn");
+            string typeKr = accessoriesNode.Attributes["TypeKr"]?.Value ?? throw new NullReferenceException("NotFound AccessoriesNode.TypeKr");
+            string? sIsUseColor = accessoriesNode.Attributes["IsUseColor"]?.Value;
 
-            XmlElement rootEle = xDoc.DocumentElement;
+            if (!Boolean.TryParse(sIsUseColor, out bool isUseColor))
+                isUseColor = false;
 
-            MaterialID[] iColorID = new MaterialID[]
+            MaterialID[] colorIds = new MaterialID[]
                 {
                     MaterialID.accessory_back,
                     MaterialID.accessory_front,
@@ -291,74 +546,72 @@ namespace GhostInTheShell.Modules.Shell
                     MaterialID.accessory_underwear
                 };
 
-            return rootEle.ChildNodes
-                .Cast<XmlNode>()
-                .SelectMany(accessoreisNode =>
-                {
-                    string typeEn = accessoreisNode.Attributes["TypeEn"].Value;
-                    string typeKr = accessoreisNode.Attributes["TypeKr"].Value;
-                    bool isUseColor = accessoreisNode.Attributes["IsUseColor"]?.Value.ToLower() == "true";
-
-                    return accessoreisNode.ChildNodes
+            return accessoriesNode.ChildNodes
                         .Cast<XmlNode>()
-                        .Select(accessoryNode => new AccessoryModel(accessoryNode.Attributes["Label"].Value, accessoryNode.Attributes["FileName"].Value, null, iColorID, typeKr, typeEn));
-                }).ToArray();
+                        .Select(createAccessoryModel)
+                        .ToArray();
+
+            AccessoryModel createAccessoryModel(XmlNode accessoryNode)
+            {
+                if (accessoryNode is null)
+                    throw new ArgumentNullException(nameof(accessoryNode));
+                if (accessoryNode.Attributes is null)
+                    throw new NullReferenceException("AccessoryNode.Attributes");
+
+                string accessoryLabel = accessoryNode.Attributes["Label"]?.Value ?? throw new NullReferenceException("NotFound AccessoryNode.Label");
+                string accessoryFileName= accessoryNode.Attributes["FileName"]?.Value ?? throw new NullReferenceException("NotFound AccessoryNode.FileName");
+
+                return new AccessoryModel(accessoryLabel, accessoryFileName, null, colorIds, typeKr, typeEn);
+            }
         }
-        /// <exception cref="ArgumentNullException"/>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="XmlException"/>
-        protected virtual ClothModel[] InitializeCloth(XmlReader xmlReader)
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="XmlException"></exception>
+        protected virtual ClothModel CreateClothModel(XmlNode clothNode)
         {
-            XmlDocument xDoc = new XmlDocument();
-            xDoc.Load(xmlReader);
+            if (clothNode is null)
+                throw new ArgumentNullException(nameof(clothNode));
+            if(clothNode.Attributes is null)
+                throw new NullReferenceException("ClothNode.Attributes");
 
-            XmlElement rootEle = xDoc.DocumentElement;
+            MaterialID[] normalIds = new MaterialID[] { MaterialID.body_back, MaterialID.body_front, MaterialID.body_front_accessory };
+            MaterialID[] colorIds = new MaterialID[] { MaterialID.body_front_color };
 
-            MaterialID[] clothNoramlID = new MaterialID[] { MaterialID.body_back, MaterialID.body_front, MaterialID.body_front_accessory };
-            MaterialID[] clothColorID = new MaterialID[] { MaterialID.body_front_color };
+            string clothLabel = clothNode.Attributes["Label"]?.Value ?? throw new NullReferenceException("NotFound AccessoryNode.Label");
+            string clothFileName = clothNode.Attributes["FileName"]?.Value ?? throw new NullReferenceException("NotFound AccessoryNode.FileName");
 
-            return rootEle.ChildNodes
-                .Cast<XmlNode>()
-                .Select(clothNode =>
-                {
-                    bool useUnderwear = true;
-                    bool usePad = false;
+            bool isUseUnderwear = true;
+            string? bIsUseUnderwear = clothNode.Attributes["UseUnderwear"]?.Value;
+            if (!String.IsNullOrEmpty(bIsUseUnderwear) && Boolean.TryParse(bIsUseUnderwear, out isUseUnderwear))
+            {
+            }
 
-                    XmlAttribute underAtt = clothNode.Attributes.Cast<XmlAttribute>().FirstOrDefault(att => String.Compare(att.Name, "UseUnderwear", true) == 0);
-                    if (underAtt != null)
-                    {
-                        useUnderwear = String.Compare(underAtt.Value, "true", true) == 0;
-                    }
-                    else
-                    {
-                        underAtt = clothNode.Attributes.Cast<XmlAttribute>().FirstOrDefault(att => String.Compare(att.Name, "UsePad", true) == 0);
+            bool isUsePad = false;
+            string? bIsUsePad = clothNode.Attributes["UsePad"]?.Value;
+            if (!String.IsNullOrEmpty(bIsUsePad) && Boolean.TryParse(bIsUsePad, out isUsePad))
+            {
+            }
 
-                        if (underAtt != null)
-                        {
-                            useUnderwear = false;
-                            usePad = String.Compare(underAtt.Value, "true", true) == 0;
-                        }
-                    }
-
-                    return new ClothModel(clothNode.Attributes["Label"].Value, clothNode.Attributes["FileName"].Value, clothNoramlID, clothColorID, useUnderwear, usePad);
-                }).ToArray();
+            return new ClothModel(clothLabel, clothFileName, normalIds, colorIds, isUseUnderwear, isUsePad);
         }
-        /// <exception cref="ArgumentNullException"/>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="XmlException"/>
-        protected virtual UnderwearModel[] InitializeUnderwear(XmlReader xmlReader)
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="XmlException"></exception>
+        protected virtual UnderwearModel CreateUnderwearModel(XmlNode underwearNode)
         {
-            XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.Load(xmlReader);
+            if (underwearNode is null)
+                throw new ArgumentNullException(nameof(underwearNode));
+            if (underwearNode.Attributes is null)
+                throw new NullReferenceException("UnderwearNode.Attributes");
 
-            XmlElement rootEle = xmlDoc.DocumentElement;
-            MaterialID[] normalIDs = new MaterialID[] { MaterialID.accessory_underwear };
+            MaterialID[] normalIds = new MaterialID[] { MaterialID.accessory_underwear };
+            string underwearLabel = underwearNode.Attributes?["Label"]?.Value ?? throw new NullReferenceException("NotFound UnderwearNode.Label");
+            string underwearFileName = underwearNode.Attributes?["FileName"]?.Value ?? throw new NullReferenceException("NotFound UnderwearNode.FileName");
 
-            return rootEle.ChildNodes
-                .Cast<XmlNode>()
-                .Select(node => new UnderwearModel(node.Attributes["Label"].Value, node.Attributes["FileName"].Value, normalIDs, null)).ToArray();
+            return new UnderwearModel(underwearLabel, underwearFileName, normalIds, null);
         }
         #endregion Initialize
+
 
         private XmlReader createTableReader(Stream tableStream)
         {
@@ -371,8 +624,6 @@ namespace GhostInTheShell.Modules.Shell
             return XmlReader.Create(tableStream, xmlReaderSettings);
         }
     }
-
-
 
 
 

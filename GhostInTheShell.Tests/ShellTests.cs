@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,10 +28,13 @@ namespace GhostInTheShell.Tests
         public async Task TableTest()
         {
             var logger = LoggerMockFactory.CreateLogger<ShellModelFactory>();
-            ShellModelFactory modelFac = new ShellModelFactory(logger, _config);
+            HttpClient client = new HttpClient();
+
+            ShellModelFactory modelFac = new ShellModelFactory(logger, _config, client);
 
             bool isTableReady = await modelFac.InitializeAsync("Fumino");
             Assert.IsTrue(isTableReady);
         }
     }
 }
+ 
