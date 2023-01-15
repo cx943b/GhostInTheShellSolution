@@ -134,7 +134,7 @@ namespace GhostInTheShell.Modules.Shell
             }
         }
 
-        protected abstract Task<byte[]> RequestMaterial(string shellName, string materialPath);
+        protected abstract Task<byte[]?> RequestMaterial(string shellName, string materialPath);
 
         private async Task<ColorableMaterialModel?> createColorMaterialAsync(string shellName, string fileName, MaterialID materialId)
         {

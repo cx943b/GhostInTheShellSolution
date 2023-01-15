@@ -3,6 +3,7 @@ using GhostInTheShell.Modules.Shell.Models;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -12,10 +13,34 @@ using System.Windows.Automation.Text;
 
 namespace GhostInTheShell.Tests
 {
+    public class CharacterInfo : ICharacter
+    {
+        public string ShellName { get; init; }
+        public Size ShellSize { get; init; }
+
+        public CharacterInfo(string shellName, Size shellSize)
+        {
+            if(String.IsNullOrEmpty(shellName))
+                throw new ArgumentNullException(nameof(shellName));
+            if(ShellSize.IsEmpty)
+                throw new ArgumentNullException(nameof(shellSize));
+
+            ShellSize = shellSize;
+            ShellName = shellName;
+        }
+    }
+
+
     [TestClass]
     public class ShellTests
     {
-        const string ShellName = "Fumino";
+        IDictionary<string, Size> _dicCharInfo = new Dictionary<string, Size>()
+        {
+            { "Kaori", new Size(650, 1250) },
+            { "Fumino", new Size(650, 1200) }
+        };
+
+        const string ShellName = "Kaori";//"Fumino";
         IConfiguration _config;
 
         [TestInitialize]
@@ -77,7 +102,7 @@ namespace GhostInTheShell.Tests
 
             try
             {
-                matStream = matFac.Overlap(orderedMaterials, new System.Drawing.Size(650, 1200));
+                matStream = matFac.Overlap(orderedMaterials, _dicCharInfo[ShellName]);
                 Assert.IsNotNull(matStream);
 
                 fs = new FileStream("Test.png", FileMode.Create, FileAccess.Write);
