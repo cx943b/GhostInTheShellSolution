@@ -177,7 +177,7 @@ namespace GhostInTheShell.Modules.Shell
             _config = config;
             _client = client;
 
-            _materialRoot = _config.GetSection(MaterialRootSectionName)?.Value ?? throw new KeyNotFoundException("TableRootSectionName");
+            _materialRoot = _config.GetSection(MaterialRootSectionName)?.Value ?? throw new KeyNotFoundException("MaterialRootSectionName");
         }
 
         protected override async Task<byte[]?> RequestMaterial(string shellName, string materialPath)
