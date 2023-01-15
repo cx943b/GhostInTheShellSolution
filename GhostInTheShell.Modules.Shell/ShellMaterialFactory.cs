@@ -8,71 +8,84 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
+using System.Printing.IndexedProperties;
+using Microsoft.Extensions.Configuration;
+using static System.Net.WebRequestMethods;
 
 namespace GhostInTheShell.Modules.Shell
 {
-    public abstract class ShellMaterialFactoryBase
+    public interface IShellMaterialFactory
     {
-        readonly ILogger _logger;
+        Task<bool> LoadMaterial(string shellName, ShellModelBase shellModel);
+        MemoryStream? Overlap(IOrderedEnumerable<IMaterialModel> materialModels, Size shellSize);
+        void UnloadMaterial(ShellModelBase shellModel);
+    }
+    public abstract class ShellMaterialFactoryBase : IShellMaterialFactory
+    {
+        protected readonly ILogger _Logger;
 
         public ShellMaterialFactoryBase(ILogger<ShellMaterialFactoryBase> logger)
         {
-            _logger = logger;
+            _Logger = logger;
         }
 
         public async Task<bool> LoadMaterial(string shellName, ShellModelBase shellModel)
         {
-            if (shellModel.ColorMaterials == null && shellModel.ColorIDs != null)
+            UnloadMaterial(shellModel);
+
+            try
             {
-                List<ColorableMaterialModel> lstModels = new List<ColorableMaterialModel>();
-
-                foreach (MaterialID matID in shellModel.ColorIDs)
+                if (shellModel.ColorMaterials == null && shellModel.ColorIds != null)
                 {
-                    byte[] imgBytes = await RequestMaterial(shellName, $"{matID}\\{shellModel.FileName}");
-                    if (imgBytes == null)
-                        continue;
+                    Task<ColorableMaterialModel?>[] matTasks = shellModel.ColorIds.Select(matId => createColorMaterialAsync(shellName, shellModel.FileName, matId)).ToArray();
+                    var colorMaterialModels = await Task.WhenAll(matTasks);
 
-                    MemoryStream imgStream = new MemoryStream(imgBytes);
-                    Bitmap bit = (Bitmap)Bitmap.FromStream(imgStream, false, false);
-                    bit.SetResolution(96, 96);
-
-                    ColorableMaterialModel matModel = new ColorableMaterialModel(matID, shellModel.FileName, bit);
-                    lstModels.Add(matModel);
+                    shellModel.ColorMaterials = colorMaterialModels.Where(m => m != null).Cast<ColorableMaterialModel>().ToArray();
                 }
 
-                shellModel.ColorMaterials = lstModels.ToArray();
-            }
+                if (shellModel.Materials == null && shellModel.NormalIds != null)
+                {
+                    Task<MaterialModel?>[] matTasks = shellModel.NormalIds.Select(matId => createMaterialAsync(shellName, shellModel.FileName, matId)).ToArray();
+                    var materialModels = await Task.WhenAll(matTasks);
 
-            if (shellModel.Materials == null && shellModel.NormalIDs != null)
+                    shellModel.Materials = materialModels.Where(m => m != null).Cast<MaterialModel>().ToArray();
+                }
+
+                return true;
+            }
+            catch(Exception ex)
             {
-                List<MaterialModel> lstModels = new List<MaterialModel>();
-
-                try
-                {
-                    foreach (MaterialID matID in shellModel.NormalIDs)
-                    {
-                        byte[] imgBytes = await RequestMaterial(shellName, $"{matID}\\{shellModel.FileName}");
-                        if (imgBytes == null)
-                            continue;
-
-                        MemoryStream imgStream = new MemoryStream(imgBytes);
-                        Bitmap bit = (Bitmap)Bitmap.FromStream(imgStream, false, false);
-                        bit.SetResolution(96, 96);
-
-                        MaterialModel matModel = new MaterialModel(matID, shellModel.FileName, bit);
-                        lstModels.Add(matModel);
-                    }
-
-                    shellModel.Materials = lstModels.ToArray();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex.Message);
-                }
+                _Logger.Log(LogLevel.Error, ex, null);
+                return false;
             }
-
-            return true;
         }
+
+        public void UnloadMaterial(ShellModelBase shellModel)
+        {
+            if(shellModel.ColorMaterials != null)
+            {
+                foreach(var colorMaterial in shellModel.ColorMaterials)
+                {
+                    colorMaterial.Dispose();
+                }
+
+                shellModel.ColorMaterials = null;
+            }
+
+            if(shellModel.Materials != null)
+            {
+                foreach(var material in shellModel.Materials)
+                {
+                    material.Dispose();
+                }
+
+                shellModel.Materials = null;
+            }
+        }
+
+
+
         public MemoryStream? Overlap(IOrderedEnumerable<IMaterialModel> materialModels, Size shellSize)
         {
             if (materialModels == null)
@@ -98,7 +111,8 @@ namespace GhostInTheShell.Modules.Shell
                         {
                             if (model.ImageData == null)
                             {
-                                Console.WriteLine();
+                                _Logger.Log(LogLevel.Warning, $"{model.FileName}'s ImageData is Null");
+                                continue;
                             }
 
                             g.DrawImage(model.ImageData, pos);
@@ -109,31 +123,90 @@ namespace GhostInTheShell.Modules.Shell
                     }
                 }
 
-                _logger.LogInformation("MaterialOverlaped");
+                _Logger.LogInformation("MaterialOverlaped");
 
                 return ms;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message, "ShellMaterialFactory", "Overlap");
+                _Logger.LogError(ex.Message, "ShellMaterialFactory", "Overlap");
                 return null;
             }
         }
 
         protected abstract Task<byte[]> RequestMaterial(string shellName, string materialPath);
+
+        private async Task<ColorableMaterialModel?> createColorMaterialAsync(string shellName, string fileName, MaterialID materialId)
+        {
+            string materialFileName = $"{materialId}/{fileName}";
+            byte[]? imgBytes = await RequestMaterial(shellName, materialFileName);
+            if (imgBytes == null)
+                return null;
+
+            MemoryStream imgStream = new MemoryStream(imgBytes);
+            Bitmap bit = (Bitmap)Bitmap.FromStream(imgStream, false, false);
+            bit.SetResolution(96, 96);
+
+            return new ColorableMaterialModel(materialId, materialFileName, bit);
+        }
+        private async Task<MaterialModel?> createMaterialAsync(string shellName, string fileName, MaterialID materialId)
+        {
+            string materialFileName = $"{materialId}\\{fileName}";
+            byte[]? imgBytes = await RequestMaterial(shellName, materialFileName);
+            if (imgBytes == null)
+                return null;
+
+            MemoryStream imgStream = new MemoryStream(imgBytes);
+            Bitmap bit = (Bitmap)Bitmap.FromStream(imgStream, false, false);
+            bit.SetResolution(96, 96);
+
+            return new MaterialModel(materialId, materialFileName, bit);
+        }
     }
 
     public sealed class ShellMaterialFactory : ShellMaterialFactoryBase
     {
         const string MaterialRootSectionName = "ShellData:Dav:MaterialRoot";
+        
+        readonly string _materialRoot;
+        readonly IConfiguration _config;
+        readonly HttpClient _client;
 
-        public ShellMaterialFactory(ILogger<ShellMaterialFactory> logger) : base(logger)
+        public ShellMaterialFactory(ILogger<ShellMaterialFactory> logger, IConfiguration config, HttpClient client) : base(logger)
         {
+            _config = config;
+            _client = client;
+
+            _materialRoot = _config.GetSection(MaterialRootSectionName)?.Value ?? throw new KeyNotFoundException("TableRootSectionName");
         }
 
-        protected override async Task<byte[]> RequestMaterial(string shellName, string materialPath)
+        protected override async Task<byte[]?> RequestMaterial(string shellName, string materialPath)
         {
-            return null;
+            // Allow NotExistFilePath
+            string reqPath = $"{_materialRoot}{shellName}/{materialPath}";
+
+            HttpResponseMessage? resMsg = null;
+
+            try
+            {
+                resMsg = await _client.GetAsync(reqPath);
+                if(resMsg.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    _Logger.Log(LogLevel.Information, $"{reqPath} does not exist");
+                    return null;
+                }
+
+                return await resMsg.Content.ReadAsByteArrayAsync();
+            }
+            catch(Exception ex)
+            {
+                _Logger.Log(LogLevel.Critical, ex, null);
+                return null;
+            }
+            finally
+            {
+                resMsg?.Dispose();
+            }
         }
     }
 }

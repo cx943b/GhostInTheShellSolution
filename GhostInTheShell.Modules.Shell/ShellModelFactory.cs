@@ -32,7 +32,7 @@ namespace GhostInTheShell.Modules.Shell
         Task<(int width, int height)> RequestMaterialSizeAsync(string shellName);
         Task<XmlReader> RequestTableAsync(string shellName, string tableName);
     }
-    public interface IShellModelFactory : ICharacter
+    public interface IShellModelFactory
     {
         IEnumerable<string> GetLabels(ShellPartType partType);
         IEnumerable<ShellModelBase> GetModels(ShellPartType partType, string label);
@@ -50,8 +50,8 @@ namespace GhostInTheShell.Modules.Shell
         readonly IDictionary<ShellPartType, IEnumerable<ShellModelBase>> _dicPartModels = new Dictionary<ShellPartType, IEnumerable<ShellModelBase>>();
         readonly IDictionary<ShellPartType, IEnumerable<string>> _dicPartLabels = new Dictionary<ShellPartType, IEnumerable<string>>();
 
-        public string ShellName { get; protected set; } = String.Empty;
-        public Size ShellSize { get; protected set; }
+        //public string ShellName { get; protected set; } = String.Empty;
+        //public Size ShellSize { get; protected set; }
 
         public ShellModelFactoryBase(ILogger logger, IConfiguration config, HttpClient client)
         {
@@ -70,7 +70,21 @@ namespace GhostInTheShell.Modules.Shell
         public IEnumerable<ShellModelBase> GetModels(ShellPartType partType, string label)
         {
             if (!_dicPartModels.ContainsKey(partType))
-                throw new KeyNotFoundException($"{partType}");
+            {
+                if (ShellPartType.Accessory.HasFlag(partType))
+                {
+                    partType= ShellPartType.Accessory;
+                }
+                else if(ShellPartType.Hair.HasFlag(partType))
+                {
+                    partType = ShellPartType.Hair;
+                }
+                else 
+                {
+                    throw new KeyNotFoundException($"{partType}");
+                }
+            }
+                
 
             return _dicPartModels[partType].Where(model => String.Compare(model.Label, label, true) == 0).ToArray();
         }
@@ -104,8 +118,8 @@ namespace GhostInTheShell.Modules.Shell
 
                 bool[] initResults = await Task.WhenAll(initTasks);
                 bool isModelsReady = initResults.All(r => true);
-                if(isModelsReady)
-                    ShellName = shellName;
+                //if(isModelsReady)
+                //    ShellName = shellName;
 
                 return isModelsReady;
             }

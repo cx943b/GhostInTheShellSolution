@@ -46,7 +46,7 @@ namespace GhostInTheShell.Modules.Shell.Models
         public override void Dispose()
         {
             _colorBitmap?.Dispose();
-            _colorBitmap = null;
+            //_colorBitmap = null;
 
             base.Dispose();
         }

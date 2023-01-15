@@ -17,7 +17,8 @@ namespace GhostInTheShell.Modules.Shell
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         { 
-            // CheckEnvironment, use factory from Remote or Local
+            containerRegistry.RegisterSingleton<IShellModelFactory, ShellModelFactory>();
+            containerRegistry.RegisterSingleton<IShellMaterialFactory, ShellMaterialFactory>();
         }
     }
 }

@@ -33,7 +33,7 @@ namespace GhostInTheShell.Modules.Shell.Models
         public int MainIndex { get; set; }
         public int SubIndex { get; set; }
 
-        public MaterialModel(MaterialID id, string fileName, Bitmap? bitmap)
+        public MaterialModel(MaterialID id, string fileName, Bitmap bitmap)
         {
             if(bitmap is null) throw new ArgumentNullException(nameof(bitmap));
             if(String.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));

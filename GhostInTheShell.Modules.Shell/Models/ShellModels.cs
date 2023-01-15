@@ -14,21 +14,21 @@ namespace GhostInTheShell.Modules.Shell.Models
         protected readonly MaterialID[] _NormalIDs;
         protected readonly MaterialID[] _ColorIDs;
 
-        protected MaterialModel[] _Materials;
-        protected ColorableMaterialModel[] _ColorMaterials;
+        protected MaterialModel[]? _Materials;
+        protected ColorableMaterialModel[]? _ColorMaterials;
 
         public bool IsColorable => _ColorMaterials != null;
         public string Label => _Label;
         public virtual string FileName => _FileName;
-        public MaterialID[] NormalIDs => _NormalIDs;
-        public MaterialID[] ColorIDs => _ColorIDs;
+        public MaterialID[] NormalIds => _NormalIDs;
+        public MaterialID[] ColorIds => _ColorIDs;
 
-        public MaterialModel[] Materials
+        public MaterialModel[]? Materials
         {
             get { return _Materials; }
             set { _Materials = value; }
         }
-        public ColorableMaterialModel[] ColorMaterials
+        public ColorableMaterialModel[]? ColorMaterials
         {
             get { return _ColorMaterials; }
             set { _ColorMaterials = value; }
@@ -53,7 +53,7 @@ namespace GhostInTheShell.Modules.Shell.Models
         public IEnumerable<string> GetRelativePaths()
         {
             var normalPaths = (_NormalIDs == null ? Enumerable.Empty<string>() : _NormalIDs.Select(nID => $"\\{nID}\\{_FileName}" + (_FileName.EndsWith("png") ? "" : ".png")));
-            var colorPaths = (_ColorIDs == null ? Enumerable.Empty<string>() : ColorIDs.Select(cID => $"\\{cID}\\{_FileName}" + (_FileName.EndsWith("png") ? "" : ".png")));
+            var colorPaths = (_ColorIDs == null ? Enumerable.Empty<string>() : ColorIds.Select(cID => $"\\{cID}\\{_FileName}" + (_FileName.EndsWith("png") ? "" : ".png")));
 
             return normalPaths.Concat(colorPaths);
         }
