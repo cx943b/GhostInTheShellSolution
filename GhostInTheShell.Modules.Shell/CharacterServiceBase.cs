@@ -10,7 +10,11 @@ using System.Windows.Media.TextFormatting;
 
 namespace GhostInTheShell.Modules.Shell
 {
-    public abstract class CharacterServiceBase : ICharacter
+    public interface ICharacterService
+    {
+        Task<bool> InitializeAsync(string shellName);
+    }
+    public abstract class CharacterServiceBase : ICharacter, ICharacterService
     {
         readonly ILogger _logger;
         readonly IConfiguration _config;
@@ -33,6 +37,7 @@ namespace GhostInTheShell.Modules.Shell
         public async Task<bool> InitializeAsync(string shellName)
         {
             bool isModelFactoryReady = await _modelFac.InitializeAsync(shellName);
+            return isModelFactoryReady;
         }
     }
 }

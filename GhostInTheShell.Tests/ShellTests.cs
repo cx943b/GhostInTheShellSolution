@@ -47,7 +47,6 @@ namespace GhostInTheShell.Tests
         public void Initialize()
         {
             _config = new ConfigurationBuilder()
-                   .SetBasePath(Environment.CurrentDirectory)
                    .AddJsonFile("G:\\SosoProjects\\GhostInTheShellSolution\\GhostInTheShell\\AppSettings.json")
                    .Build();
         }
