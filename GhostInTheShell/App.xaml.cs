@@ -51,14 +51,17 @@ namespace GhostInTheShell
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            var config = new ConfigurationBuilder()
-                .SetBasePath(Environment.CurrentDirectory)
-                .AddJsonFile("appsettings.json")
-                .Build();
-
-            containerRegistry.RegisterSingleton<IConfiguration>(() => config);
+            containerRegistry.RegisterSingleton<IConfiguration>(() =>
+            {
+                return new ConfigurationBuilder()
+                    .SetBasePath(Environment.CurrentDirectory)
+                    .AddJsonFile("appsettings.json")
+                    .Build();
+            });
             containerRegistry.RegisterSingleton<ILoggerFactory>(prov =>
             {
+                var config = prov.Resolve<IConfiguration>() ?? throw new NullReferenceException("Couldn't resolve IConfiguration");
+
                 return LoggerFactory.Create(builder =>
                 {
                     var logger = new LoggerConfiguration()
@@ -71,6 +74,7 @@ namespace GhostInTheShell
                         .AddDebug();
                 });
             });
+
             //containerRegistry.Register(typeof(ILogger<>), typeof(Logger<>));
         }
     }
