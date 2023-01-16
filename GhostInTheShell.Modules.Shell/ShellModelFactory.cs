@@ -22,7 +22,7 @@ namespace GhostInTheShell.Modules.Shell
 {
     public interface ICharacter
     {
-        string ShellName { get; }
+        string? ShellName { get; }
         Size ShellSize { get; }
     }
     public interface IShellRemoteService : IDisposable
@@ -96,6 +96,9 @@ namespace GhostInTheShell.Modules.Shell
                 return false;
             }
 
+            _dicPartLabels.Clear();
+            _dicPartModels.Clear();
+
             try
             {
                 Task<bool>[] initTasks = new Task<bool>[]
@@ -117,9 +120,7 @@ namespace GhostInTheShell.Modules.Shell
                 //await InitializeUnderwearsAsync(shellName);
 
                 bool[] initResults = await Task.WhenAll(initTasks);
-                bool isModelsReady = initResults.All(r => true);
-                //if(isModelsReady)
-                //    ShellName = shellName;
+                bool isModelsReady = !initResults.Any(r => !r);
 
                 return isModelsReady;
             }
