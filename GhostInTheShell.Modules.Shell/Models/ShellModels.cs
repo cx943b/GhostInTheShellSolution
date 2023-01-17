@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GhostInTheShell.Modules.InfraStructure;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -58,28 +59,35 @@ namespace GhostInTheShell.Modules.Shell.Models
             return normalPaths.Concat(colorPaths);
         }
 
+        /// <summary>
+        /// Concat materials
+        /// </summary>
+        /// <returns>Lazy load Enumerables</returns>
         public IEnumerable<IMaterialModel> GetMaterials()
         {
-            List<IMaterialModel> lst = new List<IMaterialModel>();
-            if (_ColorMaterials != null)
-                lst.AddRange(_ColorMaterials);
-            if (_Materials != null)
-                lst.AddRange(_Materials);
+            var materials = _ColorMaterials?.Cast<IMaterialModel>() ?? Enumerable.Empty<IMaterialModel>();
+            return materials.Concat(_Materials?.Cast<IMaterialModel>() ?? Enumerable.Empty<IMaterialModel>());
 
-            return lst.AsEnumerable();
+            //List<IMaterialModel> lst = new List<IMaterialModel>();
+            //if (_ColorMaterials != null)
+            //    lst.AddRange(_ColorMaterials);
+            //if (_Materials != null)
+            //    lst.AddRange(_Materials);
+
+            //return lst.AsEnumerable();
         }
 
-        public void ChangeColor(float h, float s, float l)
+        public void ChangeColor(Hsl hslColor)
         {
-            if (!IsColorable)
+            if (_ColorMaterials is null)
                 return;
 
             foreach (ColorableMaterialModel model in _ColorMaterials)
-                model.ChangeColor(h, s, l);
+                model.ChangeColor(hslColor);
         }
         public void ChangeDefaultColor()
         {
-            if (!IsColorable)
+            if (_ColorMaterials is null)
                 return;
 
             foreach (ColorableMaterialModel model in _ColorMaterials)

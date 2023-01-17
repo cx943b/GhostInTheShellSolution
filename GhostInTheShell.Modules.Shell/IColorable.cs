@@ -1,8 +1,10 @@
-﻿namespace GhostInTheShell.Modules.Shell
+﻿using GhostInTheShell.Modules.InfraStructure;
+
+namespace GhostInTheShell.Modules.Shell
 {
     public interface IColorable
     {
-        void ChangeColor(float h, float s, float l);
+        void ChangeColor(Hsl hslColor);
         void ChangeDefaultColor();
     }
 }

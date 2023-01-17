@@ -151,7 +151,7 @@ namespace GhostInTheShell.Modules.Shell
         }
         private async Task<MaterialModel?> createMaterialAsync(string shellName, string fileName, MaterialID materialId)
         {
-            string materialFileName = $"{materialId}\\{fileName}";
+            string materialFileName = $"{materialId}/{fileName}";
             byte[]? imgBytes = await RequestMaterial(shellName, materialFileName);
             if (imgBytes == null)
                 return null;
