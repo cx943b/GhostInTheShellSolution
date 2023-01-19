@@ -43,8 +43,8 @@ namespace GhostInTheShell.Modules.Shell
     public enum MaterialID
     {
         // Back
-        Bottom,
-        accessory_back = Bottom,
+        //Bottom,
+        accessory_back,
         hair_back,
         hair_back_accessory,
         body_back,
@@ -62,8 +62,8 @@ namespace GhostInTheShell.Modules.Shell
         face_haircolor,         // 15
         eye,                    // 16
         eye_color,              // 17
-        accessory_front,
-        Top = accessory_front
+        accessory_front
+        //Top = accessory_front
         // Front
     }
 }

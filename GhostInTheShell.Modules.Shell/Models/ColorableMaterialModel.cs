@@ -52,7 +52,7 @@ namespace GhostInTheShell.Modules.Shell.Models
             base.Dispose();
         }
 
-        public void ChangeColor(Hsl hslColor)
+        public bool ChangeColor(Hsl hslColor)
         {
             if(hslColor is null)
                 throw new ArgumentNullException(nameof(hslColor));
@@ -60,7 +60,7 @@ namespace GhostInTheShell.Modules.Shell.Models
             _hslColor = hslColor;
             _IsUseColor = true;
 
-            applyColor();
+            return applyColor();
         }
         public void ChangeDefaultColor()
         {
@@ -71,7 +71,7 @@ namespace GhostInTheShell.Modules.Shell.Models
             _colorBitmap = null;
         }
 
-        private void applyColor()
+        private bool applyColor()
         {
             if (_colorBitmap == null)
             {
@@ -79,15 +79,15 @@ namespace GhostInTheShell.Modules.Shell.Models
                 _colorBitmap.SetResolution(96.0f, 96.0f);
             }
 
-
-            Rectangle rect = new Rectangle(0, 0, _width, _height);
-            BitmapData bitData = _bitmap.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-            BitmapData colorBitData = _colorBitmap.LockBits(rect, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-
-            //
-
-            _colorBitmap.UnlockBits(colorBitData);
-            _bitmap.UnlockBits(bitData);
+            try
+            {
+                _colorBitmap = HslConverter.ColorChangeByHsl(_bitmap, _hslColor!.H, _hslColor.S, _hslColor.L);
+                return true;
+            }
+            catch(Exception ex)
+            {
+                return false;
+            }
         }
     }
 }

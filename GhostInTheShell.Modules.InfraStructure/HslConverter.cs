@@ -218,7 +218,7 @@ namespace GhostInTheShell.Modules.InfraStructure
 
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:플랫폼 호환성 유효성 검사", Justification = "<보류 중>")]
-        public static Bitmap ColorChangeByHsl(Bitmap srcBit, float hue, float saturation, float brightness)
+        public static Bitmap ColorChangeByHsl(Bitmap srcBit, double hue, double saturation, double brightness)
         {
             if (hue < 0 || hue > 1)
                 throw new ArgumentOutOfRangeException(nameof(hue));
@@ -252,7 +252,7 @@ namespace GhostInTheShell.Modules.InfraStructure
         /// <param name="l">Light</param>
         /// <param name="bytesPerPixel"></param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:플랫폼 호환성 유효성 검사", Justification = "<보류 중>")]
-        internal static void HslProcess(BitmapData srcBitData, BitmapData dstBitData, float h, float s, float l)
+        internal static void HslProcess(BitmapData srcBitData, BitmapData dstBitData, double h, double s, double l)
         {
             unsafe
             {

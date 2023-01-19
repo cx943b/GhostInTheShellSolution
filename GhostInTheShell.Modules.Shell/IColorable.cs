@@ -4,7 +4,7 @@ namespace GhostInTheShell.Modules.Shell
 {
     public interface IColorable
     {
-        void ChangeColor(Hsl hslColor);
+        bool ChangeColor(Hsl hslColor);
         void ChangeDefaultColor();
     }
 }

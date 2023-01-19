@@ -77,13 +77,15 @@ namespace GhostInTheShell.Modules.Shell.Models
             //return lst.AsEnumerable();
         }
 
-        public void ChangeColor(Hsl hslColor)
+        public bool ChangeColor(Hsl hslColor)
         {
             if (_ColorMaterials is null)
-                return;
+                return false;
 
             foreach (ColorableMaterialModel model in _ColorMaterials)
                 model.ChangeColor(hslColor);
+
+            return true;
         }
         public void ChangeDefaultColor()
         {

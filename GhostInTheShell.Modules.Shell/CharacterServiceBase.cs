@@ -18,7 +18,14 @@ namespace GhostInTheShell.Modules.Shell
     public interface ICharacterService
     {
         Task<bool> AddAccessory(ShellPartType accessoryType, string newAccessoryLabel);
+        bool ChangeAccessoryColor(ShellPartType partType, Hsl hslColor);
         Task<bool> ChangeCloth(string newClothLabel);
+        void ChangeDefaultAccessoryColor(ShellPartType partType);
+        void ChangeDefaultPartColor(ShellPartType partType);
+        Task<bool> ChangeEye(string newFaceLabel);
+        Task<bool> ChangeFace(string newFaceLabel);
+        Task<bool> ChangeHead(string newHeadLabel);
+        bool ChangePartColor(ShellPartType partType, Hsl hslColor);
         Task<bool> ChangeUnderwear(string newUnderwearLabel);
         Task<bool> InitializeAsync(string shellName);
         bool RemoveAccessory(ShellPartType accessoryType, string oldAccessoryLabel);
@@ -33,6 +40,7 @@ namespace GhostInTheShell.Modules.Shell
         readonly IShellModelFactory _modelFac;
         readonly IShellMaterialFactory _matFac;
 
+        readonly Random _rand = new Random();
         readonly HttpClient _Client;
         readonly string? _tableRoot;
 
@@ -59,110 +67,52 @@ namespace GhostInTheShell.Modules.Shell
 
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<bool> ChangeCloth(string newClothLabel)
+        public async Task<bool> ChangeCloth(string label)
         {
-            if (String.IsNullOrEmpty(ShellName)) throw new InvalidOperationException("NotInitialize");
-            if (String.IsNullOrEmpty(newClothLabel)) throw new ArgumentNullException(nameof(newClothLabel));
+            ShellPartType partType = ShellPartType.Cloth;
+            ShellModelBase? newModel = await changePart(partType, label);
 
-            if (_dicShellPartModel.ContainsKey(ShellPartType.Cloth))
+            if (newModel is not null)
             {
-                var oldModel = _dicShellPartModel[ShellPartType.Cloth];
-                _matFac.UnloadMaterial(oldModel);
+                if (_dicShellPartColor.TryGetValue(partType, out Hsl? hslColor))
+                    newModel.ChangeColor(hslColor);
 
-                _dicShellPartModel.Remove(ShellPartType.Cloth);
+                return true;
             }
 
-            IEnumerable<string> clothLabels = _modelFac.GetLabels(ShellPartType.Cloth);
-            if(!clothLabels.Contains(newClothLabel))
-            {
-                _logger.Log(LogLevel.Warning, $"NotFound: {newClothLabel}");
-                return false;
-            }
-
-            var newModel = _modelFac.GetModels(ShellPartType.Cloth, newClothLabel).FirstOrDefault();
-            if(newModel is null)
-            {
-                _logger.Log(LogLevel.Warning, $"NotFound: {newModel}");
-                return false;
-            }
-
-            bool isMaterialReady = await _matFac.LoadMaterial(ShellName, newModel);
-            if(!isMaterialReady)
-            {
-                _logger.Log(LogLevel.Error, $"ErrorLoadMaterial: {newModel}");
-                return false;
-            }
-
-            if(_dicShellPartColor.TryGetValue(ShellPartType.Cloth, out Hsl? hslColor))
-                newModel.ChangeColor(hslColor);
-
-            _dicShellPartModel.Add(ShellPartType.Cloth, newModel);
-            return true;
+            return false;
         }
-        public async Task<bool> ChangeUnderwear(string newUnderwearLabel)
+        public async Task<bool> ChangeUnderwear(string label)
         {
-            if (String.IsNullOrEmpty(ShellName)) throw new InvalidOperationException("NotInitialize");
-            if (String.IsNullOrEmpty(newUnderwearLabel)) throw new ArgumentNullException(nameof(newUnderwearLabel));
+            ShellPartType partType = ShellPartType.Underwear;
+            ShellModelBase? newModel = await changePart(partType, label);
 
-            if (_dicShellPartModel.ContainsKey(ShellPartType.Underwear))
-            {
-                var oldModel = _dicShellPartModel[ShellPartType.Underwear];
-                _matFac.UnloadMaterial(oldModel);
-
-                _dicShellPartModel.Remove(ShellPartType.Underwear);
-            }
-
-            IEnumerable<string> underwearLabels = _modelFac.GetLabels(ShellPartType.Underwear);
-            if (!underwearLabels.Contains(newUnderwearLabel))
-            {
-                _logger.Log(LogLevel.Warning, $"NotFound: {newUnderwearLabel}");
-                return false;
-            }
-
-            var newModel = _modelFac.GetModels(ShellPartType.Underwear, newUnderwearLabel).FirstOrDefault();
-            if (newModel is null)
-            {
-                _logger.Log(LogLevel.Warning, $"NotFound: {newModel}");
-                return false;
-            }
-
-            bool isMaterialReady = await _matFac.LoadMaterial(ShellName, newModel);
-            if (!isMaterialReady)
-            {
-                _logger.Log(LogLevel.Error, $"ErrorLoadMaterial: {newModel}");
-                return false;
-            }
-
-            //if (_dicShellPartColor.TryGetValue(ShellPartType.Underwear, out Hsl? hslColor))
-            //    newModel.ChangeColor(hslColor);
-
-            _dicShellPartModel.Add(ShellPartType.Underwear, newModel);
-            return true;
+            return newModel != null;
         }
 
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        public async Task<bool> AddAccessory(ShellPartType accessoryType, string newAccessoryLabel)
+        public async Task<bool> AddAccessory(ShellPartType accessoryType, string label)
         {
             if (String.IsNullOrEmpty(ShellName)) throw new InvalidOperationException("NotInitialize");
-            if (String.IsNullOrEmpty(newAccessoryLabel)) throw new ArgumentNullException(nameof(newAccessoryLabel));
+            if (String.IsNullOrEmpty(label)) throw new ArgumentNullException(nameof(label));
             if (!ShellPartType.Accessory.HasFlag(accessoryType)) throw new ArgumentException($"NotAccessoryType: {accessoryType}");
 
-            if (_dicAccessoryModels.ContainsKey(accessoryType) && _dicAccessoryModels[accessoryType].Any(m => String.Compare(m.Label, newAccessoryLabel, true) == 0))
+            if (_dicAccessoryModels.ContainsKey(accessoryType) && _dicAccessoryModels[accessoryType].Any(m => String.Compare(m.Label, label, true) == 0))
             {
-                _logger.Log(LogLevel.Warning, $"AddAccessory-AlreadyExist: {newAccessoryLabel}");
+                _logger.Log(LogLevel.Warning, $"AddAccessory-AlreadyExist: {label}");
                 return false;
             }
 
             IEnumerable<string> accessoryLabels = _modelFac.GetLabels(accessoryType);
-            if (!accessoryLabels.Contains(newAccessoryLabel))
+            if (!accessoryLabels.Contains(label))
             {
-                _logger.Log(LogLevel.Warning, $"AddAccessory-NotFound: {newAccessoryLabel}");
+                _logger.Log(LogLevel.Warning, $"AddAccessory-NotFound: {label}");
                 return false;
             }
 
-            var newModel = _modelFac.GetModels(accessoryType, newAccessoryLabel).FirstOrDefault();
+            var newModel = _modelFac.GetModels(accessoryType, label).FirstOrDefault();
             if (newModel is null)
             {
                 _logger.Log(LogLevel.Warning, $"AddAccessory-NotFound: {newModel}");
@@ -186,20 +136,167 @@ namespace GhostInTheShell.Modules.Shell
             return true;
         }
 
-        public bool RemoveAccessory(ShellPartType accessoryType, string oldAccessoryLabel)
+        public bool RemoveAccessory(ShellPartType accessoryType, string label)
         {
             if(_dicAccessoryModels.ContainsKey(accessoryType))
             {
-                var oldModel = _dicAccessoryModels[accessoryType].FirstOrDefault(m => String.Compare(m.Label, oldAccessoryLabel, true) == 0);
+                var oldModel = _dicAccessoryModels[accessoryType].FirstOrDefault(m => String.Compare(m.Label, label, true) == 0);
                 if(oldModel == null)
                 {
-                    _logger.Log(LogLevel.Warning, $"RemoveAccessory-NotFound: {oldAccessoryLabel}");
+                    _logger.Log(LogLevel.Warning, $"RemoveAccessory-NotFound: {label}");
                     return false;
                 }
                 return _dicAccessoryModels[accessoryType].Remove(oldModel);
             }
 
             return false;
+        }
+
+        public async Task<bool> ChangeHead(string label)
+        {
+            ShellModelBase? newModel = await changePart(ShellPartType.Head, label);
+            return newModel != null;
+        }
+        public async Task<bool> ChangeFace(string label)
+        {
+            ShellPartType partType = ShellPartType.Face;
+            ShellModelBase? newModel = await changePart(partType, label);
+
+            if(newModel is not null)
+            {
+                if (_dicShellPartColor.TryGetValue(partType, out Hsl? hslColor))
+                    newModel.ChangeColor(hslColor);
+
+                ((FaceModel)newModel).IsMouthMakeup = true;
+                return true;
+            }
+
+            return false;
+        }
+        public async Task<bool> ChangeEye(string label)
+        {
+            ShellPartType partType = ShellPartType.Eye;
+            ShellModelBase? newModel = await changePart(partType, label);
+
+            if (newModel is not null)
+            {
+                ((EyeModel)newModel).IsEyeMakeup = true;
+
+                if (_dicShellPartColor.TryGetValue(partType, out Hsl? hslColor))
+                    newModel.ChangeColor(hslColor);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public async Task<bool> ChangeFrontHair(string label)
+        {
+            ShellPartType partType = ShellPartType.FrontHair;
+            ShellModelBase? newModel = await changePart(partType, label);
+
+            if (newModel is not null)
+            {
+                if (_dicShellPartColor.TryGetValue(partType, out Hsl? hslColor))
+                    newModel.ChangeColor(hslColor);
+
+                return true;
+            }
+
+            return false;
+        }
+        public async Task<bool> ChangeBackHair(string label)
+        {
+            ShellPartType partType = ShellPartType.BackHair;
+            ShellModelBase? newModel = await changePart(partType, label);
+
+            if (newModel is not null)
+            {
+                if (_dicShellPartColor.TryGetValue(partType, out Hsl? hslColor))
+                    newModel.ChangeColor(hslColor);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool ChangePartColor(ShellPartType partType, Hsl hslColor)
+        {
+            if (!ShellPartType.Accessory.HasFlag(partType))
+            {
+                if (_dicShellPartColor.ContainsKey(partType))
+                    _dicShellPartColor[partType] = hslColor; 
+                else
+                    _dicShellPartColor.Add(partType, hslColor);
+
+                if (_dicShellPartModel.TryGetValue(partType, out ShellModelBase? modelBase))
+                    modelBase.ChangeColor(hslColor);
+
+                return true;
+            }
+            else
+            {
+                _logger.Log(LogLevel.Warning, "ChangePartColor-InvalidPartType: Use 'ChangeAccessoryColor'");
+                return false;
+            }
+        }
+        public void ChangeDefaultPartColor(ShellPartType partType)
+        {
+            if (!ShellPartType.Accessory.HasFlag(partType))
+            {
+                if (_dicShellPartColor.ContainsKey(partType))
+                {
+                    _dicShellPartColor.Remove(partType);
+
+                    if (_dicShellPartModel.TryGetValue(partType, out ShellModelBase? modelBase))
+                        modelBase.ChangeDefaultColor();
+                }
+            }
+            else
+            {
+                _logger.Log(LogLevel.Warning, "ChangePartColor-InvalidPartType: Use 'ChangeAccessoryColor'");
+            }
+        }
+
+        public bool ChangeAccessoryColor(ShellPartType partType, Hsl hslColor)
+        {
+            if (ShellPartType.Accessory.HasFlag(partType))
+            {
+
+                if (_dicShellPartColor.ContainsKey(partType))
+                    _dicShellPartColor[partType] = hslColor; 
+                else
+                    _dicShellPartColor.Add(partType, hslColor);
+
+                if (_dicAccessoryModels.TryGetValue(partType, out List<ShellModelBase>? modelBases))
+                    modelBases.ForEach(m => m.ChangeColor(hslColor));
+
+                return true;
+            }
+            else
+            {
+                _logger.Log(LogLevel.Warning, "ChangeAccessoryColor-InvalidPartType: Use 'ChangePartColor'");
+                return false;
+            }
+        }
+        public void ChangeDefaultAccessoryColor(ShellPartType partType)
+        {
+            if (ShellPartType.Accessory.HasFlag(partType))
+            {
+                if (_dicShellPartColor.ContainsKey(partType))
+                {
+                    _dicShellPartColor.Remove(partType);
+
+                    if (_dicAccessoryModels.TryGetValue(partType, out List<ShellModelBase>? modelBases))
+                        modelBases.ForEach(m => m.ChangeDefaultColor());
+                }
+            }
+            else
+            {
+                _logger.Log(LogLevel.Warning, "ChangeDefaultAccessoryColor-InvalidPartType: Use 'ChangeDefaultPartColor'");
+            }
         }
 
 
@@ -298,7 +395,59 @@ namespace GhostInTheShell.Modules.Shell
             var accessoryModelMaterials = _dicAccessoryModels.Values.SelectMany(m => m).SelectMany(m => m.GetMaterials());
 
             return partModelMaterials.Concat(accessoryModelMaterials);
-                        ;
+        }
+
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        private async Task<ShellModelBase?> changePart(ShellPartType partType, string newPartLabel)
+        {
+            if (String.IsNullOrEmpty(ShellName)) throw new InvalidOperationException("NotInitialize");
+            if (String.IsNullOrEmpty(newPartLabel)) throw new ArgumentNullException(nameof(newPartLabel));
+
+            if (_dicShellPartModel.ContainsKey(partType))
+            {
+                var oldModel = _dicShellPartModel[partType];
+                _matFac.UnloadMaterial(oldModel);
+
+                _dicShellPartModel.Remove(partType);
+            }
+
+            IEnumerable<string> partLabels = _modelFac.GetLabels(partType);
+            if (!partLabels.Contains(newPartLabel))
+            {
+                _logger.Log(LogLevel.Warning, $"NotFound: {newPartLabel}");
+                return null;
+            }
+
+            var models = _modelFac.GetModels(partType, newPartLabel);
+            if (models is null)
+            {
+                _logger.Log(LogLevel.Warning, $"NotFound: {newPartLabel}");
+                return null;
+            }
+
+            var newModel = models.ElementAt(_rand.Next(models.Count()));
+
+            // ---
+            var eyeModel = newModel as EyeModel;
+            if (eyeModel != null) { eyeModel.IsEyeMakeup= true; }
+
+            // ---
+
+
+
+            bool isMaterialReady = await _matFac.LoadMaterial(ShellName, newModel);
+            if (!isMaterialReady)
+            {
+                _logger.Log(LogLevel.Error, $"ErrorLoadMaterial: {newModel}");
+                return null;
+            }
+
+            //if (_dicShellPartColor.TryGetValue(ShellPartType.Underwear, out Hsl? hslColor))
+            //    newModel.ChangeColor(hslColor);
+
+            _dicShellPartModel.Add(partType, newModel);
+            return newModel;
         }
     }
 }
