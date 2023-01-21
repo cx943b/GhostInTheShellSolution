@@ -12,6 +12,7 @@ using System.Net.Http;
 using System.Printing.IndexedProperties;
 using Microsoft.Extensions.Configuration;
 using static System.Net.WebRequestMethods;
+using System.Windows.Media.Imaging;
 
 namespace GhostInTheShell.Modules.Shell
 {
@@ -96,33 +97,31 @@ namespace GhostInTheShell.Modules.Shell
                 return null;
             //throw new ArgumentException("Overlap: materialModels, Count: 0");
 
+            Bitmap? bitmap = null;
+            Graphics? g = null;
+
             try
             {
                 MemoryStream ms = new MemoryStream();
 
-                using (Bitmap bitmap = new Bitmap(shellSize.Width, shellSize.Height, PixelFormat.Format32bppArgb))
+                bitmap = new Bitmap(shellSize.Width, shellSize.Height, PixelFormat.Format32bppArgb);
+                bitmap.SetResolution(96, 96);
+
+                g = Graphics.FromImage(bitmap);
+                Point pos = new Point(0, 0);
+
+                foreach (IMaterialModel model in materialModels)
                 {
-                    bitmap.SetResolution(96, 96);
-
-                    using (Graphics g = Graphics.FromImage(bitmap))
+                    if (model.ImageData == null)
                     {
-                        Point pos = new Point(0, 0);
-                        foreach (IMaterialModel model in materialModels)
-                        {
-                            if (model.ImageData == null)
-                            {
-                                _Logger.Log(LogLevel.Warning, $"{model.FileName}'s ImageData is Null");
-                                continue;
-                            }
-
-                            g.DrawImage(model.ImageData, pos);
-                        }
-
-
-                        bitmap.Save(ms, ImageFormat.Png);
+                        _Logger.Log(LogLevel.Warning, $"{model.FileName}'s ImageData is Null");
+                        continue;
                     }
+
+                    g.DrawImage(model.ImageData, pos);
                 }
 
+                bitmap.Save(ms, ImageFormat.Png);
                 _Logger.LogInformation("MaterialOverlaped");
 
                 return ms;
@@ -131,6 +130,11 @@ namespace GhostInTheShell.Modules.Shell
             {
                 _Logger.LogError(ex.Message, "ShellMaterialFactory", "Overlap");
                 return null;
+            }
+            finally
+            {
+                g?.Dispose();
+                bitmap?.Dispose();
             }
         }
 

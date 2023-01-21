@@ -1,6 +1,9 @@
 ﻿using GhostInTheShell.Modules.Shell;
 using GhostInTheShell.Modules.Shell.Models;
+using GhostInTheShell.Modules.Shell.ViewModels;
 using Microsoft.Extensions.Configuration;
+using Moq;
+using Prism.Events;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,11 +15,16 @@ using System.Threading.Tasks;
 
 namespace GhostInTheShell.Tests
 {
+    // https://arctouch.com/blog/moq-unit-testing-prism-eventaggregator
     [TestClass]
     public class CharacterTests
     {
         const string ShellName = "Kaori";//"Fumino";
+
+        readonly Stopwatch _watch = new Stopwatch();
         IConfiguration _config;
+        Mock<IEventAggregator> _moEventAggr;
+        Mock<MaterialCollectionChangedEvent> _moMatCollChangedEvent;
 
         [TestInitialize]
         public void Initialize()
@@ -24,17 +32,29 @@ namespace GhostInTheShell.Tests
             _config = new ConfigurationBuilder()
                    .AddJsonFile("G:\\SosoProjects\\GhostInTheShellSolution\\GhostInTheShell\\AppSettings.json")
                    .Build();
+
+            _moMatCollChangedEvent = new Mock<MaterialCollectionChangedEvent>();
+            _moMatCollChangedEvent
+                .Setup(e => e.Publish(It.IsAny<MemoryStream>()))
+                .Callback<MemoryStream>(ms => onMaterialCollectionChanged(ms));
+
+            _moEventAggr = new Mock<IEventAggregator>();
+            _moEventAggr
+                .Setup(ea => ea.GetEvent<MaterialCollectionChangedEvent>())
+                .Returns(_moMatCollChangedEvent.Object);
         }
 
         [TestMethod]
-        public async Task CharacterInitTest()
+        public async Task CharacterInitTestV2()
         {
             HttpClient client = new HttpClient();
+
+            IEventAggregator eventAggregator = _moEventAggr.Object;
 
             ShellModelFactory modelFac = new ShellModelFactory(LoggerMockFactory.CreateLogger<ShellModelFactory>(), _config, client);
             ShellMaterialFactory matFac = new ShellMaterialFactory(LoggerMockFactory.CreateLogger<ShellMaterialFactory>(), _config, client);
 
-            CharacterService charSvc = new CharacterService(LoggerMockFactory.CreateLogger<CharacterService>(), _config, modelFac, matFac, client);
+            CharacterServiceV2 charSvc = new CharacterServiceV2(LoggerMockFactory.CreateLogger<CharacterServiceV2>(), eventAggregator, _config, modelFac, matFac, client);
             bool isCharServiceReady = await charSvc.InitializeAsync(ShellName);
             Assert.IsTrue(isCharServiceReady);
 
@@ -52,86 +72,41 @@ namespace GhostInTheShell.Tests
             isAppliedColor = charSvc.ChangePartColor(ShellPartType.BackHair, new Modules.InfraStructure.Hsl(0, 0, 0.5));
             Assert.IsTrue(isAppliedColor);
             isAppliedColor = charSvc.ChangeAccessoryColor(ShellPartType.AttachHair, new Modules.InfraStructure.Hsl(0, 0, 0.5));
-            Assert.IsTrue(isAppliedColor);
+            Assert.IsTrue(isAppliedColor);            
 
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
-
-            // Load excpt on Face
-            string clothLabel = "반바지민소매사복";
-            bool isClothChanged = await charSvc.ChangeCloth(clothLabel);
-            Assert.IsTrue(isClothChanged);
-
-            string underwearLabel = "04(下着)ﾌﾞﾗ0K水";
-            bool isUnderwearChanged = await charSvc.ChangeUnderwear(underwearLabel);
-            Assert.IsTrue(isUnderwearChanged);
-
-            bool isAccessoryAdded = await charSvc.AddAccessory(ShellPartType.Socks, "[靴下] 長0白");
-            Assert.IsTrue(isAccessoryAdded);
-            isAccessoryAdded = await charSvc.AddAccessory(ShellPartType.ShoesEx, "[靴] ｽﾆｰｶｰ0赤前");
-            Assert.IsTrue(isAccessoryAdded);
-            isAccessoryAdded = await charSvc.AddAccessory(ShellPartType.ShoesEx, "[靴] ｽﾆｰｶｰ0赤後");
-            Assert.IsTrue(isAccessoryAdded);
-            isAccessoryAdded = await charSvc.AddAccessory(ShellPartType.AttachHair, "[髪b] 40L(髪)");
-            Assert.IsTrue(isAccessoryAdded);
-            isAccessoryAdded = await charSvc.AddAccessory(ShellPartType.AttachHair, "[髪b] 40R(髪)");
-            Assert.IsTrue(isAccessoryAdded);
-
-            string frontHairLabel = "ヒタム・キャン";
-            bool isFrontHairChanged = await charSvc.ChangeFrontHair(frontHairLabel);
-            Assert.IsTrue(isFrontHairChanged);
-
-            string backHairLabel = "ヒタム・キャン";
-            bool isBackHairChanged = await charSvc.ChangeBackHair(backHairLabel);
-            Assert.IsTrue(isBackHairChanged);
-
-            watch.Stop();
-            Debug.WriteLine($"Load excpt on FacePart: {watch.ElapsedMilliseconds}ms");
-            // Load excpt on Face
-
-            // Load Face
-            watch.Restart();
-            string headLabel = "부끄럼0";
-            bool isHeadChanged = await charSvc.ChangeHead(headLabel);
-            Assert.IsTrue(isHeadChanged);
-
-            string faceLabel = "미소";
-            bool isFaceChanged = await charSvc.ChangeFace(faceLabel);
-            Assert.IsTrue(isFaceChanged);
-
-            string eyeLabel = "열림";
-            bool isEyeChanged = await charSvc.ChangeEye(eyeLabel);
-            Assert.IsTrue(isEyeChanged);
-
-            watch.Stop();
-            Debug.WriteLine($"Load FacePart: {watch.ElapsedMilliseconds}ms");
-            // Load Face
-
-            var orderedMaterials = charSvc.GetMaterials()
-                .OrderBy(m => m.MainIndex)
-                .ThenBy(m => m.SubIndex);
-
-            MemoryStream? matStream = null;
-            FileStream? fs = null;
-
-            try
+            IDictionary<ShellPartType, string> dicChangePart = new Dictionary<ShellPartType, string>()
             {
-                watch.Restart();
-                matStream = matFac.Overlap(orderedMaterials, charSvc.ShellSize);
-                Assert.IsNotNull(matStream);
+                { ShellPartType.Cloth, "반바지민소매사복" },
+                { ShellPartType.Underwear, "04(下着)ﾌﾞﾗ0K水" },
+                { ShellPartType.FrontHair, "ヒタム・キャン" },
+                { ShellPartType.BackHair, "ヒタム・キャン" },
+                { ShellPartType.Head, "부끄럼0" },
+                { ShellPartType.Face, "미소" },
+                { ShellPartType.Eye, "열림" }
+            };
 
-                watch.Stop();
-                Debug.WriteLine($"Overlaped: {watch.ElapsedMilliseconds}ms");
-
-                fs = new FileStream("Test.png", FileMode.Create, FileAccess.Write);
-                matStream.Position = 0;
-                matStream.CopyTo(fs);
-            }
-            finally
+            IEnumerable<AccessoryAddPair> accessoryAddPairs = new AccessoryAddPair[]
             {
-                fs?.Dispose();
-                matStream?.Dispose();
-            }
+                new AccessoryAddPair(ShellPartType.Socks, "[靴下] 長0白"),
+                new AccessoryAddPair(ShellPartType.ShoesEx, "[靴] ｽﾆｰｶｰ0赤前"),
+                new AccessoryAddPair(ShellPartType.ShoesEx, "[靴] ｽﾆｰｶｰ0赤後"),
+                new AccessoryAddPair(ShellPartType.AttachHair, "[髪b] 40L(髪)"),
+                new AccessoryAddPair(ShellPartType.AttachHair, "[髪b] 40R(髪)")
+            };
+
+            _watch.Start();
+
+            await charSvc.ChangeShell(dicChangePart, accessoryAddPairs);
+        }
+
+        private void onMaterialCollectionChanged(MemoryStream ms)
+        {
+            _watch.Stop();
+            Debug.WriteLine($"ImageOverlaped: {_watch.ElapsedMilliseconds}ms");
+
+            using FileStream fs = new FileStream("Test.png", FileMode.Create, FileAccess.Write);
+            ms.Position = 0;
+            ms.CopyTo(fs);
         }
     }
 }
