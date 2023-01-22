@@ -539,7 +539,7 @@ namespace GhostInTheShell.Modules.Shell
             _tableRoot = _Config.GetSection(TableRootSectionName)?.Value ?? throw new KeyNotFoundException("TableRootSectionName");
         }
 
-        public async Task ChangeShell(IDictionary<ShellPartType, string> dicParts, IEnumerable<AccessoryAddPair> dicAccessoryParts)
+        public async Task ChangeShell(IDictionary<ShellPartType, string>? dicParts, IEnumerable<AccessoryAddPair>? dicAccessoryParts)
         {
             try
             {
@@ -562,10 +562,10 @@ namespace GhostInTheShell.Modules.Shell
         }
         /// <exception cref="ArgumentNullException"></exception>
         /// /// <exception cref="AggregateException"></exception>
-        public async Task ChangeParts(IDictionary<ShellPartType, string> dicParts)
+        public async Task ChangeParts(IDictionary<ShellPartType, string>? dicParts)
         {
-            if(dicParts is null)
-                throw new ArgumentNullException(nameof(dicParts));
+            if (dicParts is null)
+                return;
 
             Task<(ShellPartType, ShellModelBase)?>[] tasks = dicParts.Select(kvp => changePart(kvp.Key, kvp.Value)).ToArray();
             (ShellPartType, ShellModelBase)?[]? changeResults = await Task.WhenAll(tasks);
@@ -583,10 +583,10 @@ namespace GhostInTheShell.Modules.Shell
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// /// /// <exception cref="AggregateException"></exception>
-        public async Task AddAccessories(IEnumerable<AccessoryAddPair> dicAccessoryParts)
+        public async Task AddAccessories(IEnumerable<AccessoryAddPair>? dicAccessoryParts)
         {
-            if(dicAccessoryParts is null)
-                throw new ArgumentNullException(nameof(dicAccessoryParts));
+            if (dicAccessoryParts is null)
+                return;
             if (dicAccessoryParts.Any(p => !ShellPartType.Accessory.HasFlag(p.PartType)))
                 throw new ArgumentException($"NotAccessoryType is {dicAccessoryParts}");
 
@@ -710,6 +710,8 @@ namespace GhostInTheShell.Modules.Shell
                 return false;
             }
 
+            ShellName = shellName;
+
             string initTablePath = $"{_tableRoot}{shellName}/InitializeTable.xml";
 
             HttpResponseMessage? resMsg = null;
@@ -731,18 +733,12 @@ namespace GhostInTheShell.Modules.Shell
                 xmlReaderSettings.IgnoreComments = true;
 
                 xmlReader = XmlReader.Create(xmlStream, xmlReaderSettings);
-                if (initMaterialSize(xmlReader))
+                if (await initializeCharacter(xmlReader))
                 {
-                    bool isModelFactoryReady = await _modelFac.InitializeAsync(shellName);
-                    if (isModelFactoryReady)
-                    {
-                        ShellName = shellName;
-                        
-                        _shellSizeChangedEvent.Publish(ShellSize);
-                        _logger.Log(LogLevel.Information, "ModelFactory Ready");
+                    _shellSizeChangedEvent.Publish(ShellSize);
+                    _logger.Log(LogLevel.Information, "ModelFactory Ready");
 
-                        return true;
-                    }
+                    return true;
                 }
 
                 return false;
@@ -778,12 +774,27 @@ namespace GhostInTheShell.Modules.Shell
 
 
 
-        private bool initMaterialSize(XmlReader xmlReader)
+        private async Task<bool> initializeCharacter(XmlReader xmlReader)
         {
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.Load(xmlReader);
 
-            XmlNode? sizeNode = xmlDoc.DocumentElement!.SelectSingleNode("/ShellInitializeInfo/ShellSize");
+            if(xmlDoc.DocumentElement is null)
+            {
+                _logger.Log(LogLevel.Error, "Could't read XmlDocument.DocumentElement");
+                return false;
+            }
+
+            bool isShellSizeReady = initializeShellSize(xmlDoc.DocumentElement);
+            if(isShellSizeReady && await initializeCharacterParameters(xmlDoc.DocumentElement))
+                return true;
+
+            return false;
+        }
+
+        private bool initializeShellSize(XmlElement rootEle)
+        {
+            XmlNode? sizeNode = rootEle.SelectSingleNode("/ShellInitializeInfo/ShellSize");
             if (sizeNode == null)
             {
                 _logger.Log(LogLevel.Critical, "NotFound ShellInitializeInfo/ShellSize");
@@ -815,6 +826,147 @@ namespace GhostInTheShell.Modules.Shell
             }
         }
 
+        private async Task<bool> initializeCharacterParameters(XmlElement rootEle)
+        {
+            XmlNode? charNode = rootEle.SelectSingleNode("/ShellInitializeInfo/ShellBasicStatus");
+            if(charNode is null)
+            {
+                _logger.Log(LogLevel.Error, "NotFound: ShellBasicStatusNode");
+                return false;
+            }
+
+            try
+            {
+                var dicPartColor = charNode
+                    .SelectNodes("./PartColor")?
+                    .Cast<XmlNode>()
+                    .Select(createColorParameter)
+                    .Where(kvp => kvp is not null);
+
+                if(dicPartColor != null)
+                {
+                    foreach(var partColor in dicPartColor)
+                        _dicShellPartColor.Add(partColor!.Value.Key, partColor!.Value.Value);
+                }
+
+                var dicAccessoryColor = charNode
+                    .SelectNodes("./AccessoryColor")?
+                    .Cast<XmlNode>()
+                    .Select(createColorParameter)
+                    .Where(kvp => kvp is not null);
+
+                if (dicAccessoryColor != null)
+                {
+                    foreach (var partColor in dicAccessoryColor)
+                        _dicShellPartColor.Add(partColor!.Value.Key, partColor!.Value.Value);
+                }
+
+                var dicPart = charNode
+                    .SelectNodes("./PartLabel")?
+                    .Cast<XmlNode>()
+                    .Select(createPartParameter)
+                    .Where(kvp => kvp is not null)
+                    .ToDictionary(kvp => kvp!.Value.Key, kvp => kvp!.Value.Value);
+
+                var accessoryPairs = charNode
+                    .SelectNodes("./AccessoryLabel")?
+                    .Cast<XmlNode>()
+                    .Select(createPartParameter)
+                    .Where(kvp => kvp is not null)
+                    .Select(kvp => new AccessoryAddPair(kvp.Value.Key, kvp.Value.Value))
+                    .ToArray();
+
+                await ChangeShell(dicPart, accessoryPairs);
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                _logger.Log(LogLevel.Error, ex.Message);
+                return false;
+            }
+
+            KeyValuePair<ShellPartType, string>? createPartParameter(XmlNode partNode)
+            {
+                string? sPartType = partNode.Attributes?["PartType"]?.Value;
+                if (String.IsNullOrEmpty(sPartType))
+                {
+                    _logger.Log(LogLevel.Warning, $"InvalidPartNodeAttributes");
+                    return null;
+                }
+
+                if(!Enum.TryParse(sPartType, true, out ShellPartType partType))
+                {
+                    _logger.Log(LogLevel.Warning, $"InvalidValue: {sPartType}");
+                    return null;
+                }
+
+                return new KeyValuePair<ShellPartType, string>(partType, partNode.InnerText);
+            }
+            KeyValuePair<ShellPartType, Hsl>? createColorParameter(XmlNode partColorNode)
+            {
+                IDictionary<string, string>? dicAtts = partColorNode.Attributes?.ToDictionary();
+                if (dicAtts is null)
+                {
+                    _logger.Log(LogLevel.Warning, $"InvalidColorNodeAttributes");
+                    return null;
+                }
+                    
+                
+                ShellPartType partType = ShellPartType.Cloth;
+                double h = 0d, s = 0d, l = 0d;
+
+                foreach(var kvp in dicAtts)
+                {
+                    switch(kvp.Key)
+                    {
+                        case "PartType":
+                            {
+                                if (!Enum.TryParse(kvp.Value, true, out partType))
+                                {
+                                    _logger.Log(LogLevel.Warning, $"InvalidValue: {kvp.Value}");
+                                    return null;
+                                }
+
+                                break;
+                            }
+                        case "H":
+                            {
+                                if (!Double.TryParse(kvp.Value,  out h))
+                                {
+                                    _logger.Log(LogLevel.Warning, $"InvalidValue: {kvp.Value}");
+                                    return null;
+                                }   
+
+                                break;
+                            }
+                        case "S":
+                            {
+                                if (!Double.TryParse(kvp.Value, out s))
+                                {
+                                    _logger.Log(LogLevel.Warning, $"InvalidValue: {kvp.Value}");
+                                    return null;
+                                }
+
+                                break;
+                            }
+                        case "L":
+                            {
+                                if (!Double.TryParse(kvp.Value, out l))
+                                {
+                                    _logger.Log(LogLevel.Warning, $"InvalidValue: {kvp.Value}");
+                                    return null;
+                                }
+
+                                break;
+                            }
+                    }
+                }
+
+                Hsl color = new Hsl(h, s, l);
+                return new KeyValuePair<ShellPartType, Hsl>(partType, color);
+            }
+        }
 
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="ArgumentNullException"></exception>

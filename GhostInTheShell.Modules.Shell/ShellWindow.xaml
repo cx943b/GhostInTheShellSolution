@@ -8,10 +8,12 @@
         Title="ShellWindow"
         xmlns:infra="clr-namespace:GhostInTheShell.Modules.InfraStructure;assembly=GhostInTheShell.Modules.InfraStructure"
         xmlns:prism="http://prismlibrary.com/"
-        prism:ViewModelLocator.AutoWireViewModel="True"
+        Background="{x:Null}"
+        WindowStyle="None"
+        AllowsTransparency="True"
         Width="{Binding ShellSize.Width}" Height="{Binding ShellSize.Height}">
 
-    <ContentControl prism:RegionManager.RegionName="{x:Static infra:WellknownRegionNames.ShellViewRegion}"
+    <!--<ContentControl prism:RegionManager.RegionName="{x:Static infra:WellknownRegionNames.ShellViewRegion}"
                     Width="{Binding ShellSize.Width}"
-                    Height="{Binding ShellSize.Height}"/>
+                    Height="{Binding ShellSize.Height}"/>-->
 </Window>

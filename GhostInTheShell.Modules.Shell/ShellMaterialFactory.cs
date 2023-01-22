@@ -187,7 +187,7 @@ namespace GhostInTheShell.Modules.Shell
         protected override async Task<byte[]?> RequestMaterial(string shellName, string materialPath)
         {
             // Allow NotExistFilePath
-            string reqPath = $"{_materialRoot}{shellName}/700/{materialPath}";
+            string reqPath = $"{_materialRoot}{shellName}/1250/{materialPath}";
 
             HttpResponseMessage? resMsg = null;
 

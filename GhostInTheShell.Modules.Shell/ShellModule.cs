@@ -12,13 +12,18 @@ namespace GhostInTheShell.Modules.Shell
 {
     public sealed class ShellModule : IModule
     {
-        public void OnInitialized(IContainerProvider containerProvider)
+        const string ShellName = "Kaori";
+
+        public async void OnInitialized(IContainerProvider containerProvider)
         {
+            var modelFac = containerProvider.Resolve<IShellModelFactory>();
+            await modelFac.InitializeAsync(ShellName);
+
             var regionMgr = containerProvider.Resolve<IRegionManager>();
             regionMgr.RegisterViewWithRegion(WellknownRegionNames.ShellViewRegion, nameof(Views.ShellView));
 
             var charSvc = containerProvider.Resolve<ICharacterServiceV2>();
-            charSvc.InitializeAsync("Kaori");
+            await charSvc.InitializeAsync("Kaori");
         }
 
         public void RegisterTypes(IContainerRegistry containerRegistry)

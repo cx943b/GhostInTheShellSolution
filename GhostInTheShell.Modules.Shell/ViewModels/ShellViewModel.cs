@@ -32,12 +32,12 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
         public BitmapImage? ShellSource
         {
             get => _ShellSource;
-            set => SetProperty(ref _ShellSource, value);
+            internal set => SetProperty(ref _ShellSource, value);
         }
         public Size ShellSize
         {
             get => _ShellSize;
-            set => SetProperty(ref _ShellSize, value);
+            internal set => SetProperty(ref _ShellSize, value);
         }
 
         public ShellViewModel(IEventAggregator eventAggregator)

@@ -10,7 +10,6 @@
              d:DataContext="{d:DesignInstance Type={x:Type localViewModel:ShellViewModel}}"
              xmlns:prism="http://prismlibrary.com/"
              
-             prism:ViewModelLocator.AutoWireViewModel="True"
              Width="{Binding ShellSize.Width}" Height="{Binding ShellSize.Height}">
 
     <Image Width="{Binding ShellSize.Width}" Height="{Binding ShellSize.Height}" Source="{Binding ShellSource}"/>
