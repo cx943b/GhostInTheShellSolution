@@ -13,20 +13,15 @@ using System.Printing.IndexedProperties;
 using Microsoft.Extensions.Configuration;
 using static System.Net.WebRequestMethods;
 using System.Windows.Media.Imaging;
+using GhostInTheShell.Modules.InfraStructure;
 
 namespace GhostInTheShell.Modules.Shell
 {
-    public interface IShellMaterialFactory
-    {
-        Task<bool> LoadMaterial(string shellName, ShellModelBase shellModel);
-        MemoryStream? Overlap(IOrderedEnumerable<IMaterialModel> materialModels, Size shellSize);
-        void UnloadMaterial(ShellModelBase shellModel);
-    }
     public abstract class ShellMaterialFactoryBase : IShellMaterialFactory
     {
         protected readonly ILogger _Logger;
 
-        public ShellMaterialFactoryBase(ILogger<ShellMaterialFactoryBase> logger)
+        public ShellMaterialFactoryBase(ILogger logger)
         {
             _Logger = logger;
         }
@@ -168,20 +163,54 @@ namespace GhostInTheShell.Modules.Shell
         }
     }
 
-    public sealed class ShellMaterialFactory : ShellMaterialFactoryBase
+    public sealed class ShellMaterialLocalFactory : ShellMaterialFactoryBase
     {
-        const string MaterialRootSectionName = "ShellData:Dav:MaterialRoot";
-        
+        readonly string _materialRoot;
+        readonly IConfiguration _config;
+
+        public ShellMaterialLocalFactory(ILogger<ShellMaterialFactoryBase> logger, IConfiguration config) : base(logger)
+        {
+            _config = config;
+
+            _materialRoot = _config.GetSection(WellknownConfigurationSecsions.LocalMaterialRoot)?.Value ?? throw new KeyNotFoundException($"{WellknownConfigurationSecsions.LocalMaterialRoot}");
+        }
+
+        protected override async Task<byte[]?> RequestMaterial(string shellName, string materialPath)
+        {
+            // Allow NotExistFilePath
+            string reqPath = $"{_materialRoot}{shellName}/1250/{materialPath}";
+
+            bool isExistPath = System.IO.File.Exists(reqPath);
+            if(!isExistPath)
+            {
+                _Logger.Log(LogLevel.Information, $"NotFound: {reqPath}");
+                return null;
+            }
+
+            try
+            {
+                return await System.IO.File.ReadAllBytesAsync(reqPath);
+            }
+            catch (Exception ex)
+            {
+                _Logger.Log(LogLevel.Critical, ex, null);
+                return null;
+            }
+        }
+    }
+
+    public sealed class ShellMaterialRemoteFactory : ShellMaterialFactoryBase
+    {
         readonly string _materialRoot;
         readonly IConfiguration _config;
         readonly HttpClient _client;
 
-        public ShellMaterialFactory(ILogger<ShellMaterialFactory> logger, IConfiguration config, HttpClient client) : base(logger)
+        public ShellMaterialRemoteFactory(ILogger<ShellMaterialRemoteFactory> logger, IConfiguration config, HttpClient client) : base(logger)
         {
             _config = config;
             _client = client;
 
-            _materialRoot = _config.GetSection(MaterialRootSectionName)?.Value ?? throw new KeyNotFoundException("MaterialRootSectionName");
+            _materialRoot = _config.GetSection(WellknownConfigurationSecsions.RemoteMaterialRoot)?.Value ?? throw new KeyNotFoundException($"{nameof(WellknownConfigurationSecsions.RemoteMaterialRoot)}");
         }
 
         protected override async Task<byte[]?> RequestMaterial(string shellName, string materialPath)
@@ -196,7 +225,7 @@ namespace GhostInTheShell.Modules.Shell
                 resMsg = await _client.GetAsync(reqPath);
                 if(resMsg.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    _Logger.Log(LogLevel.Information, $"{reqPath} does not exist");
+                    _Logger.Log(LogLevel.Information, $"NotFound: {reqPath}");
                     return null;
                 }
 

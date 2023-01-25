@@ -1,19 +1,12 @@
 ﻿using GhostInTheShell.Modules.Shell;
-using GhostInTheShell.Modules.Shell.Models;
 using GhostInTheShell.Modules.Shell.ViewModels;
 using GhostInTheShell.Modules.Shell.Views;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Prism.Events;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
@@ -47,8 +40,8 @@ namespace GhostInTheShell.Tests
     [TestClass]
     public class CharacterTests
     {
-        //const string ShellName = "Kaori";//"Fumino";
-        const string ShellName = "Fumino";
+        const string ShellName = "Kaori";//"Fumino";
+        //const string ShellName = "Fumino";
 
         readonly Stopwatch _watch = new Stopwatch();
         IConfiguration _config;
@@ -104,20 +97,20 @@ namespace GhostInTheShell.Tests
         }
 
         [TestMethod]
-        public async Task CharacterInitTestV2()
+        public async Task CharacterInitTest()
         {
             HttpClient client = new HttpClient();
 
             IEventAggregator eventAggregator = _moKaoriEventAggr.Object;
 
-            ShellModelFactory modelFac = new ShellModelFactory(LoggerMockFactory.CreateLogger<ShellModelFactory>(), _config, client);
+            ShellModelRemoteFactory modelFac = new ShellModelRemoteFactory(LoggerMockFactory.CreateLogger<ShellModelRemoteFactory>(), _config, client);
             bool isModelFactoryReady = await modelFac.InitializeAsync(ShellName);
             Assert.IsTrue(isModelFactoryReady);
 
-            ShellMaterialFactory matFac = new ShellMaterialFactory(
-                LoggerMockFactory.CreateLogger<ShellMaterialFactory>(), _config, client);
-            CharacterServiceV2 charSvc = new CharacterServiceV2(
-                LoggerMockFactory.CreateLogger<CharacterServiceV2>(), eventAggregator, _config, modelFac, matFac, client);
+            ShellMaterialRemoteFactory matFac = new ShellMaterialRemoteFactory(
+                LoggerMockFactory.CreateLogger<ShellMaterialRemoteFactory>(), _config, client);
+            ICharacterService charSvc = new CharacterRemoteService(
+                LoggerMockFactory.CreateLogger<CharacterRemoteService>(), eventAggregator, _config, modelFac, matFac, client);
 
             _watch.Start();
 
@@ -165,14 +158,14 @@ namespace GhostInTheShell.Tests
             HttpClient client = new HttpClient();
             IEventAggregator eventAggregator = _moKaoriEventAggr.Object;
 
-            ShellModelFactory modelFac = new ShellModelFactory(LoggerMockFactory.CreateLogger<ShellModelFactory>(), _config, client);
+            ShellModelRemoteFactory modelFac = new ShellModelRemoteFactory(LoggerMockFactory.CreateLogger<ShellModelRemoteFactory>(), _config, client);
             bool isModelFactoryReady = await modelFac.InitializeAsync("Kaori");
             Assert.IsTrue(isModelFactoryReady);
 
-            ShellMaterialFactory matFac = new ShellMaterialFactory(
-                LoggerMockFactory.CreateLogger<ShellMaterialFactory>(), _config, client);
-            CharacterServiceV2 charSvc = new CharacterServiceV2(
-                LoggerMockFactory.CreateLogger<CharacterServiceV2>(), eventAggregator, _config, modelFac, matFac, client);
+            ShellMaterialRemoteFactory matFac = new ShellMaterialRemoteFactory(
+                LoggerMockFactory.CreateLogger<ShellMaterialRemoteFactory>(), _config, client);
+            CharacterRemoteService charSvc = new CharacterRemoteService(
+                LoggerMockFactory.CreateLogger<CharacterRemoteService>(), eventAggregator, _config, modelFac, matFac, client);
 
             _watch.Start();
             bool isCharServiceReady = await charSvc.InitializeAsync("Kaori");
@@ -193,14 +186,14 @@ namespace GhostInTheShell.Tests
             HttpClient client = new HttpClient();
             IEventAggregator eventAggregator = _moFuminoEventAggr.Object;
 
-            ShellModelFactory modelFac = new ShellModelFactory(LoggerMockFactory.CreateLogger<ShellModelFactory>(), _config, client);
+            ShellModelRemoteFactory modelFac = new ShellModelRemoteFactory(LoggerMockFactory.CreateLogger<ShellModelRemoteFactory>(), _config, client);
             bool isModelFactoryReady = await modelFac.InitializeAsync("Fumino");
             Assert.IsTrue(isModelFactoryReady);
 
-            ShellMaterialFactory matFac = new ShellMaterialFactory(
-                LoggerMockFactory.CreateLogger<ShellMaterialFactory>(), _config, client);
-            CharacterServiceV2 charSvc = new CharacterServiceV2(
-                LoggerMockFactory.CreateLogger<CharacterServiceV2>(), eventAggregator, _config, modelFac, matFac, client);
+            ShellMaterialRemoteFactory matFac = new ShellMaterialRemoteFactory(
+                LoggerMockFactory.CreateLogger<ShellMaterialRemoteFactory>(), _config, client);
+            CharacterRemoteService charSvc = new CharacterRemoteService(
+                LoggerMockFactory.CreateLogger<CharacterRemoteService>(), eventAggregator, _config, modelFac, matFac, client);
 
             _watch.Start();
             bool isCharServiceReady = await charSvc.InitializeAsync("Fumino");
@@ -222,9 +215,9 @@ namespace GhostInTheShell.Tests
             _watch.Stop();
             Debug.WriteLine($"ImageOverlaped: {_watch.ElapsedMilliseconds}ms");
 
-            //using FileStream fs = new FileStream("Test.png", FileMode.Create, FileAccess.Write);
-            //ms.Position = 0;
-            //ms.CopyTo(fs);
+            using FileStream fs = new FileStream("Test.png", FileMode.Create, FileAccess.Write);
+            ms.Position = 0;
+            ms.CopyTo(fs);
 
             if (_kaoriViewModel is not null)
             {

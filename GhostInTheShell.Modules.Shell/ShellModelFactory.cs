@@ -20,44 +20,20 @@ using System.Xml.Linq;
 
 namespace GhostInTheShell.Modules.Shell
 {
-    public interface ICharacter
-    {
-        string? ShellName { get; }
-        Size ShellSize { get; }
-    }
-    public interface IShellRemoteService : IDisposable
-    {
-        Task<XmlReader> RequestInitializeDataAsync(string shellName);
-        Task<byte[]> RequestMaterialAsync(string shellName, string materialPath);
-        Task<(int width, int height)> RequestMaterialSizeAsync(string shellName);
-        Task<XmlReader> RequestTableAsync(string shellName, string tableName);
-    }
-    public interface IShellModelFactory
-    {
-        IEnumerable<string> GetLabels(ShellPartType partType);
-        IEnumerable<ShellModelBase> GetModels(ShellPartType partType, string label);
-        Task<bool> InitializeAsync(string shellName);
-    }
-
-    public abstract class ShellModelFactoryBase : IShellModelFactory
+    public abstract class ShellModelFactoryBase : XmlTableReaderBase, IShellModelFactory
     {
         object _initLock = new object();
 
         protected readonly ILogger _logger;
         protected readonly IConfiguration _Config;
-        protected readonly HttpClient _Client;
 
         readonly IDictionary<ShellPartType, IEnumerable<ShellModelBase>> _dicPartModels = new Dictionary<ShellPartType, IEnumerable<ShellModelBase>>();
         readonly IDictionary<ShellPartType, IEnumerable<string>> _dicPartLabels = new Dictionary<ShellPartType, IEnumerable<string>>();
 
-        //public string ShellName { get; protected set; } = String.Empty;
-        //public Size ShellSize { get; protected set; }
-
-        public ShellModelFactoryBase(ILogger logger, IConfiguration config, HttpClient client)
+        public ShellModelFactoryBase(ILogger logger, IConfiguration config)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _Config = config ?? throw new ArgumentNullException(nameof(config));
-            _Client = client;
         }
 
         public IEnumerable<string> GetLabels(ShellPartType partType)
@@ -111,13 +87,6 @@ namespace GhostInTheShell.Modules.Shell
                     InitializeHeadsAsync(shellName),
                     InitializeUnderwearsAsync(shellName)
                 };
-                //await InitializeAccessoriesAsync(shellName);
-                //await InitializeClothsAsync(shellName);
-                //await InitializeEyesAsync(shellName);
-                //await InitializeFacesAsync(shellName);
-                //await InitializeHairsAsync(shellName);
-                //await InitializeHeadsAsync(shellName);
-                //await InitializeUnderwearsAsync(shellName);
 
                 bool[] initResults = await Task.WhenAll(initTasks);
                 bool isModelsReady = !initResults.Any(r => !r);
@@ -138,7 +107,7 @@ namespace GhostInTheShell.Modules.Shell
             if (tableStream is null)
                 return false;
 
-            XmlReader xmlReader = createTableReader(tableStream);
+            XmlReader xmlReader = CreateTableReader(tableStream);
 
             try
             {
@@ -184,7 +153,7 @@ namespace GhostInTheShell.Modules.Shell
             if (tableStream is null)
                 return false;
 
-            XmlReader xmlReader = createTableReader(tableStream);
+            XmlReader xmlReader = CreateTableReader(tableStream);
 
             try
             {
@@ -224,7 +193,7 @@ namespace GhostInTheShell.Modules.Shell
             if (tableStream is null)
                 return false;
 
-            XmlReader xmlReader = createTableReader(tableStream);
+            XmlReader xmlReader = CreateTableReader(tableStream);
 
             try
             {
@@ -264,7 +233,7 @@ namespace GhostInTheShell.Modules.Shell
             if (tableStream is null)
                 return false;
 
-            XmlReader xmlReader = createTableReader(tableStream);
+            XmlReader xmlReader = CreateTableReader(tableStream);
 
             try
             {
@@ -304,7 +273,7 @@ namespace GhostInTheShell.Modules.Shell
             if (tableStream is null)
                 return false;
 
-            XmlReader xmlReader = createTableReader(tableStream);
+            XmlReader xmlReader = CreateTableReader(tableStream);
 
             try
             {
@@ -352,7 +321,7 @@ namespace GhostInTheShell.Modules.Shell
             if (tableStream is null)
                 return false;
 
-            XmlReader xmlReader = createTableReader(tableStream);
+            XmlReader xmlReader = CreateTableReader(tableStream);
 
             try
             {
@@ -392,7 +361,7 @@ namespace GhostInTheShell.Modules.Shell
             if (tableStream is null)
                 return false;
 
-            XmlReader xmlReader = createTableReader(tableStream);
+            XmlReader xmlReader = CreateTableReader(tableStream);
 
             try
             {
@@ -626,29 +595,14 @@ namespace GhostInTheShell.Modules.Shell
             return new UnderwearModel(underwearLabel, underwearFileName, normalIds, null);
         }
         #endregion Initialize
-
-
-        private XmlReader createTableReader(Stream tableStream)
-        {
-            if (tableStream is null)
-                throw new ArgumentNullException(nameof(tableStream));
-
-            XmlReaderSettings xmlReaderSettings = new XmlReaderSettings();
-            xmlReaderSettings.IgnoreComments = true;
-
-            return XmlReader.Create(tableStream, xmlReaderSettings);
-        }
     }
 
-
-
-    public class ShellModelFactory : ShellModelFactoryBase
+    public class ShellModelLocalFactory : ShellModelFactoryBase
     {
-        const string TableRootSectionName = "ShellData:Dav:TableRoot";
+        const string TableRootSectionName = "Shell:Local:TableRoot";
         readonly string? _tableRoot;
 
-
-        public ShellModelFactory(ILogger<ShellModelFactory> logger, IConfiguration config, HttpClient client) : base(logger, config, client)
+        public ShellModelLocalFactory(ILogger<ShellModelLocalFactory> logger, IConfiguration config) : base(logger, config)
         {
             _tableRoot = _Config.GetSection(TableRootSectionName)?.Value ?? throw new KeyNotFoundException("TableRootSectionName");
         }
@@ -656,15 +610,69 @@ namespace GhostInTheShell.Modules.Shell
         protected override async Task<Stream?> ReadTableDataAsync(ShellModelType modelType, string shellName)
         {
             string tablePath = $"{_tableRoot}{shellName}/{modelType}Table.xml";
+            if (!File.Exists(tablePath))
+            {
+                _logger.Log(LogLevel.Error, $"NotFound: {tablePath}");
+            }
 
             try
             {
-                return await _Client.GetStreamAsync(tablePath);
+                FileStream xmlStream = File.OpenRead(tablePath);
+                return await Task.FromResult(xmlStream);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                _logger.Log(LogLevel.Critical, ex, $"Couldn't read {tablePath}");
+                _logger.Log(LogLevel.Critical, ex.Message);
                 return null;
+            }
+        }
+    }
+
+    public class ShellModelRemoteFactory : ShellModelFactoryBase
+    {
+        const string TableRootSectionName = "Shell:Remote:TableRoot";
+        readonly string? _tableRoot;
+        
+        readonly HttpClient _client;
+
+        public ShellModelRemoteFactory(ILogger<ShellModelRemoteFactory> logger, IConfiguration config, HttpClient client) : base(logger, config)
+        {
+            _tableRoot = _Config.GetSection(TableRootSectionName)?.Value ?? throw new KeyNotFoundException("TableRootSectionName");
+            _client = client;
+        }
+
+        protected override async Task<Stream?> ReadTableDataAsync(ShellModelType modelType, string shellName)
+        {
+            string tablePath = $"{_tableRoot}{shellName}/{modelType}Table.xml";
+
+            HttpResponseMessage? resMsg = null;
+            Stream? xmlStream = null;
+            try
+            {
+                resMsg = await _client.GetAsync(tablePath);
+                if (resMsg.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    _logger.Log(LogLevel.Critical, $"NotFound: {tablePath}");
+                    return null;
+                }
+
+                xmlStream = await resMsg.Content.ReadAsStreamAsync();
+
+                MemoryStream tableStream = new MemoryStream();
+                await xmlStream.CopyToAsync(tableStream);
+
+                tableStream.Position = 0;
+                return tableStream;
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Critical, ex.Message);
+                return null;
+            }
+            finally
+            {
+                xmlStream?.Dispose();
+                resMsg?.Dispose();
             }
         }
     }
