@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Prism.Events;
 using Prism.Ioc;
 using Prism.Modularity;
-using Prism.Regions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +11,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GhostInTheShell.Modules.Shell
+namespace GhostInTheShell.Modules.ShellInfra
 {
     public sealed class ShellModule : IModule
     {
@@ -42,9 +41,6 @@ namespace GhostInTheShell.Modules.Shell
             bool isCharacterReady =  await charSvc.InitializeAsync(shellName);
             if (!isCharacterReady)
                 throw new InvalidOperationException($"NotInitialized: {nameof(ICharacterService)}");
-
-            var regionMgr = containerProvider.Resolve<IRegionManager>();
-            regionMgr.RegisterViewWithRegion(WellknownRegionNames.ShellViewRegion, nameof(Views.ShellView));
         }
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
@@ -95,34 +91,33 @@ namespace GhostInTheShell.Modules.Shell
                     return new ShellMaterialRemoteFactory(logger, config, client);
                 }
             });
+            containerRegistry.RegisterSingleton<ICharacterService, CharacterRemoteService>();
+            //containerRegistry.RegisterSingleton<ICharacterService>(prov =>
+            //{
+            //    IConfiguration config = prov.Resolve<IConfiguration>();
 
-            containerRegistry.RegisterSingleton<ICharacterService>(prov =>
-            {
-                IConfiguration config = prov.Resolve<IConfiguration>();
+            //    string? factoryType = config.GetSection("FactoryTypeSection")?.Value;
+            //    if (String.IsNullOrEmpty(factoryType))
+            //        throw new NullReferenceException("NotFound: FactoryTypeSection");
 
-                string? factoryType = config.GetSection("FactoryTypeSection")?.Value;
-                if (String.IsNullOrEmpty(factoryType))
-                    throw new NullReferenceException("NotFound: FactoryTypeSection");
+            //    var logFac = prov.Resolve<ILoggerFactory>();
+            //    var matFac = prov.Resolve<IShellMaterialFactory>();
+            //    var modelFac = prov.Resolve<IShellModelFactory>();
+            //    var eventAggr = prov.Resolve<IEventAggregator>();
 
-                var logFac = prov.Resolve<ILoggerFactory>();
-                var matFac = prov.Resolve<IShellMaterialFactory>();
-                var modelFac = prov.Resolve<IShellModelFactory>();
-                var eventAggr = prov.Resolve<IEventAggregator>();
+            //    if (String.Compare(factoryType, "Local", true) == 0)
+            //    {
+            //        var logger = logFac.CreateLogger<CharacterLocalService>();
+            //        return new CharacterLocalService(logger, eventAggr, config, modelFac, matFac);
+            //    }
+            //    else
+            //    {
+            //        var client = prov.Resolve<HttpClient>();
+            //        var logger = logFac.CreateLogger<CharacterRemoteService>();
 
-                if (String.Compare(factoryType, "Local", true) == 0)
-                {
-                    var logger = logFac.CreateLogger<CharacterLocalService>();
-                    return new CharacterLocalService(logger, eventAggr, config, modelFac, matFac);
-                }
-                else
-                {
-                    var client = prov.Resolve<HttpClient>();
-                    var logger = logFac.CreateLogger<CharacterRemoteService>();
-
-                    return new CharacterRemoteService(logger, eventAggr, config, modelFac, matFac, client);
-                }
-            });
-            containerRegistry.RegisterDialogWindow<ShellWindow>();
+            //        return new CharacterRemoteService(logger, eventAggr, config, modelFac, matFac, client);
+            //    }
+            //});
         }
     }
 }

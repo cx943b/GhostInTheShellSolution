@@ -1,5 +1,5 @@
 ﻿using GhostInTheShell.Modules.InfraStructure;
-using GhostInTheShell.Modules.Shell.Models;
+using GhostInTheShell.Modules.ShellInfra.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Xml;
@@ -8,7 +8,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 
-namespace GhostInTheShell.Modules.Shell
+namespace GhostInTheShell.Modules.ShellInfra
 {
     public interface IColorable
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GhostInTheShell.Modules.Shell
+namespace GhostInTheShell.Modules.ShellInfra
 {
     public class AccessoryAddPair
     {

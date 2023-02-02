@@ -1,6 +1,5 @@
-﻿using GhostInTheShell.Modules.Shell;
-using GhostInTheShell.Modules.Shell.ViewModels;
-using GhostInTheShell.Modules.Shell.Views;
+﻿using GhostInTheShell.Modules.ShellInfra;
+using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Prism.Events;
@@ -8,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Windows;
+using System.Windows.Automation.Text;
 using System.Windows.Media.Imaging;
 
 namespace GhostInTheShell.Tests
@@ -46,8 +46,8 @@ namespace GhostInTheShell.Tests
         readonly Stopwatch _watch = new Stopwatch();
         IConfiguration _config;
 
-        ShellViewModel _kaoriViewModel;
-        ShellViewModel _fuminoViewModel;
+        //ShellViewModel _kaoriViewModel;
+        //ShellViewModel _fuminoViewModel;
 
         Mock<IEventAggregator> _moKaoriEventAggr;
         Mock<IEventAggregator> _moFuminoEventAggr;
@@ -64,37 +64,52 @@ namespace GhostInTheShell.Tests
                    .AddJsonFile("G:\\SosoProjects\\GhostInTheShellSolution\\GhostInTheShell\\AppSettings.json")
                    .Build();
 
-            _moKaoriMatCollChangedEvent = new Mock<MaterialCollectionChangedEvent>();
-            _moKaoriMatCollChangedEvent
-                .Setup(e => e.Publish(It.IsAny<MemoryStream>()))
-                .Callback<MemoryStream>(ms => onKaoriMaterialCollectionChanged(ms));
+            //_moKaoriMatCollChangedEvent = new Mock<MaterialCollectionChangedEvent>();
+            //_moKaoriMatCollChangedEvent
+            //    .Setup(e => e.Publish(It.IsAny<MemoryStream>()))
+            //    .Callback<MemoryStream>(ms => onKaoriMaterialCollectionChanged(ms));
 
-            _moFuminoMatCollChangedEvent = new Mock<MaterialCollectionChangedEvent>();
-            _moFuminoMatCollChangedEvent
-                .Setup(e => e.Publish(It.IsAny<MemoryStream>()))
-                .Callback<MemoryStream>(ms => onFuminoMaterialCollectionChanged(ms));
+            //_moFuminoMatCollChangedEvent = new Mock<MaterialCollectionChangedEvent>();
+            //_moFuminoMatCollChangedEvent
+            //    .Setup(e => e.Publish(It.IsAny<MemoryStream>()))
+            //    .Callback<MemoryStream>(ms => onFuminoMaterialCollectionChanged(ms));
 
-            _moShellSizeChangedEvent = new Mock<ShellSizeChangedEvent>();
-            _moShellSizeChangedEvent
-                .Setup(e => e.Publish(It.IsAny<System.Drawing.Size>()))
-                .Callback<System.Drawing.Size>(size => Debug.WriteLine($"ShellSize: {size}"));
+            //_moShellSizeChangedEvent = new Mock<ShellSizeChangedEvent>();
+            //_moShellSizeChangedEvent
+            //    .Setup(e => e.Publish(It.IsAny<System.Drawing.Size>()))
+            //    .Callback<System.Drawing.Size>(size => Debug.WriteLine($"ShellSize: {size}"));
 
-            _moKaoriEventAggr = new Mock<IEventAggregator>();
-            _moKaoriEventAggr
-                .Setup(ea => ea.GetEvent<MaterialCollectionChangedEvent>())
-                .Returns(_moKaoriMatCollChangedEvent.Object);
-            _moKaoriEventAggr
-                .Setup(ea => ea.GetEvent<ShellSizeChangedEvent>())
-                .Returns(_moShellSizeChangedEvent.Object);
+            //_moKaoriEventAggr = new Mock<IEventAggregator>();
+            //_moKaoriEventAggr
+            //    .Setup(ea => ea.GetEvent<MaterialCollectionChangedEvent>())
+            //    .Returns(_moKaoriMatCollChangedEvent.Object);
+            //_moKaoriEventAggr
+            //    .Setup(ea => ea.GetEvent<ShellSizeChangedEvent>())
+            //    .Returns(_moShellSizeChangedEvent.Object);
 
-            _moFuminoEventAggr = new Mock<IEventAggregator>();
-            _moFuminoEventAggr
-                .Setup(ea => ea.GetEvent<MaterialCollectionChangedEvent>())
-                .Returns(_moFuminoMatCollChangedEvent.Object);
-            _moFuminoEventAggr
-                .Setup(ea => ea.GetEvent<ShellSizeChangedEvent>())
-                .Returns(_moShellSizeChangedEvent.Object);
+            //_moFuminoEventAggr = new Mock<IEventAggregator>();
+            //_moFuminoEventAggr
+            //    .Setup(ea => ea.GetEvent<MaterialCollectionChangedEvent>())
+            //    .Returns(_moFuminoMatCollChangedEvent.Object);
+            //_moFuminoEventAggr
+            //    .Setup(ea => ea.GetEvent<ShellSizeChangedEvent>())
+            //    .Returns(_moShellSizeChangedEvent.Object);
         }
+
+
+        [TestMethod]
+        public async Task CharacterClientTest()
+        {
+            CharacterClientService clientSvc = new CharacterClientService(LoggerMockFactory.CreateLogger<CharacterClientService>());
+            byte[]? charBytes = await clientSvc.RequestCharacterImage("부끄럼0", "중간", "웃음");
+
+            Assert.IsNotNull(charBytes);
+
+            FileStream fs = new FileStream("CharacterClientTest.png", FileMode.Create, FileAccess.Write);
+            await fs.WriteAsync(charBytes, 0, charBytes.Length);
+        }
+
+
 
         [TestMethod]
         public async Task CharacterInitTest()
@@ -116,9 +131,12 @@ namespace GhostInTheShell.Tests
 
             bool isCharServiceReady = await charSvc.InitializeAsync(ShellName);
             Assert.IsTrue(isCharServiceReady);
+
+            // For wait onMaterialCollectionChanged
+            Thread.Sleep(1000);
         }
 
-
+        /*
         [WpfTestMethod]
         public void ShowCharacterToWindow()
         {
@@ -251,6 +269,6 @@ namespace GhostInTheShell.Tests
 
                 _fuminoViewModel.ShellSource = bi;
             }
-        }
+        }*/
     }
 }

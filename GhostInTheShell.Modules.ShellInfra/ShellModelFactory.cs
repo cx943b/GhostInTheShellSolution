@@ -1,5 +1,5 @@
 ﻿using GhostInTheShell.Modules.InfraStructure;
-using GhostInTheShell.Modules.Shell.Models;
+using GhostInTheShell.Modules.ShellInfra.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,14 +11,12 @@ using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Printing.IndexedProperties;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Documents;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace GhostInTheShell.Modules.Shell
+namespace GhostInTheShell.Modules.ShellInfra
 {
     public abstract class ShellModelFactoryBase : XmlTableReaderBase, IShellModelFactory
     {

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GhostInTheShell.Modules.Shell.Models
+namespace GhostInTheShell.Modules.ShellInfra.Models
 {
     [Serializable]
     public abstract class ShellModelBase : IColorable

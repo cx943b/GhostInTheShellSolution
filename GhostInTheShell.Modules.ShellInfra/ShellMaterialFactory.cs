@@ -1,4 +1,4 @@
-﻿using GhostInTheShell.Modules.Shell.Models;
+﻿using GhostInTheShell.Modules.ShellInfra.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
@@ -9,13 +9,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
-using System.Printing.IndexedProperties;
 using Microsoft.Extensions.Configuration;
-using static System.Net.WebRequestMethods;
-using System.Windows.Media.Imaging;
 using GhostInTheShell.Modules.InfraStructure;
 
-namespace GhostInTheShell.Modules.Shell
+namespace GhostInTheShell.Modules.ShellInfra
 {
     public abstract class ShellMaterialFactoryBase : IShellMaterialFactory
     {

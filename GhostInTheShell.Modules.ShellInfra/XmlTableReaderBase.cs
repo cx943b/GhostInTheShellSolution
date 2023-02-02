@@ -2,7 +2,7 @@
 using System.IO;
 using System.Xml;
 
-namespace GhostInTheShell.Modules.Shell
+namespace GhostInTheShell.Modules.ShellInfra
 {
     public abstract class XmlTableReaderBase
     {

@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GhostInTheShell.Modules.InfraStructure;
 
-namespace GhostInTheShell.Modules.Shell.Models
+namespace GhostInTheShell.Modules.ShellInfra.Models
 {
 
     [Serializable]

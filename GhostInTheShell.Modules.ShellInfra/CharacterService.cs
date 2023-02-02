@@ -1,6 +1,5 @@
 ﻿using GhostInTheShell.Modules.InfraStructure;
-using GhostInTheShell.Modules.Shell.Models;
-using GhostInTheShell.Modules.Shell.ViewModels;
+using GhostInTheShell.Modules.ShellInfra.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Prism.Events;
@@ -15,29 +14,10 @@ using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Automation.Text;
-using System.Windows.Media.TextFormatting;
 using System.Xml;
 
-namespace GhostInTheShell.Modules.Shell
+namespace GhostInTheShell.Modules.ShellInfra
 {
-
-    // Request to gRPC
-    public class CharacterClientService : ICharacter
-    {
-        readonly IDictionary<ShellPartType, string> _dicShellPartLabel = new Dictionary<ShellPartType, string>();
-        readonly IDictionary<ShellPartType, List<string>> _dicAccessoryLabels = new Dictionary<ShellPartType, List<string>>();
-
-        public string? ShellName { get; private set; }
-        public Size ShellSize { get; private set; }
-
-        // RequestModels
-
-        // RequestOverlapedImage
-    }
-
-
-
     public abstract class CharacterServiceBase : XmlTableReaderBase, ICharacter, ICharacterService
     {
         readonly ILogger _logger;
@@ -71,6 +51,12 @@ namespace GhostInTheShell.Modules.Shell
             _shellSizeChangedEvent = eventAggregator.GetEvent<ShellSizeChangedEvent>();
         }
 
+        /// <summary>
+        /// Call OnMaterialCollectionChanged at last
+        /// </summary>
+        /// <param name="dicParts"></param>
+        /// <param name="dicAccessoryParts"></param>
+        /// <returns></returns>
         public async Task ChangeShell(IDictionary<ShellPartType, string>? dicParts, IEnumerable<AccessoryAddPair>? dicAccessoryParts)
         {
             try
@@ -234,41 +220,55 @@ namespace GhostInTheShell.Modules.Shell
         }
 
 
-        public async Task<bool> InitializeAsync(string shellName)
+        protected async Task<(IDictionary<ShellPartType, string>, IEnumerable<AccessoryAddPair>)> InitializeBaseAsync(string shellName)
         {
             if (string.IsNullOrEmpty(shellName))
-            {
-                _logger.Log(LogLevel.Critical, new ArgumentNullException(nameof(shellName)), "InvalidShellName");
-                return false;
-            }
+                throw new ArgumentNullException(nameof(shellName));
 
             Stream? xmlStream = await ReadTableStreamAsync(shellName);
             if(xmlStream is null)
-            {
-                _logger.Log(LogLevel.Error, "FaultReadTableStream");
-                return false;
-            }
+                throw new FileLoadException(nameof(shellName));                
 
             XmlReader xmlReader = base.CreateTableReader(xmlStream);
-            bool isCharacterInitialized = await initializeCharacter(xmlReader, shellName);
+            XmlDocument xmlDoc = new XmlDocument();
 
-            xmlReader.Dispose();
-            xmlStream.Dispose();
-
-            if (isCharacterInitialized)
+            try
             {
-                _shellSizeChangedEvent.Publish(ShellSize);
+                xmlDoc.Load(xmlReader);
+
+                if (xmlDoc.DocumentElement is null)
+                    throw new XmlException("NullRef: DocumentElement");
+
+                bool isShellSizeReady = initializeShellSize(xmlDoc.DocumentElement);
+                if (!isShellSizeReady)
+                    throw new InvalidOperationException("NotReady: ShellSize");
+
                 _logger.Log(LogLevel.Information, "ModelFactory Ready");
+                var retParam = initializeCharacterParameters(xmlDoc.DocumentElement);
 
-                return true;
+                ShellName = shellName;
+                return retParam;
             }
-            else
+            catch (Exception ex)
             {
-                _logger.Log(LogLevel.Error, "FaultInitializeCharacter");
-                return false;
+                _logger.Log(LogLevel.Error, ex.Message);
+                throw;
+            }
+            finally
+            {
+                xmlReader.Dispose();
+                xmlStream.Dispose();
             }
         }
 
+        protected virtual byte[]? GetOverlapedImage()
+        {
+            var partModelMaterials = _dicShellPartModel.Values.SelectMany(m => m.GetMaterials());
+            var accessoryModelMaterials = _dicAccessoryModels.Values.SelectMany(m => m).SelectMany(m => m.GetMaterials());
+
+            MemoryStream? materialStream = _matFac.Overlap(partModelMaterials.Concat(accessoryModelMaterials).OrderBy(m => m.MainIndex).ThenBy(m => m.SubIndex), ShellSize);
+            return materialStream?.ToArray();
+        }
 
         protected virtual void OnMaterialCollectionChanged()
         {
@@ -282,37 +282,23 @@ namespace GhostInTheShell.Modules.Shell
 
         protected abstract Task<Stream?> ReadTableStreamAsync(string shellName);
 
-        private async Task<bool> initializeCharacter(XmlReader xmlReader, string shellName)
+
+        protected string? GetConcatedHeadPartFileName()
         {
-            XmlDocument xmlDoc = new XmlDocument();
+            var targetPartTypes = new ShellPartType[] { ShellPartType.Head, ShellPartType.Eye, ShellPartType.Face };
+            bool isAllReady = !targetPartTypes.Any(pt => !_dicShellPartModel.ContainsKey(pt));
 
-            try
+            if (!isAllReady)
             {
-                xmlDoc.Load(xmlReader);
-            }
-            catch(Exception ex)
-            {
-                _logger.Log(LogLevel.Error, ex.Message);
-                return false;
+                _logger.Log(LogLevel.Warning, "NotCompletedHeadParts");
+                return null;
             }
 
-            if(xmlDoc.DocumentElement is null)
-            {
-                _logger.Log(LogLevel.Error, "NullReference: DocumentElement");
-                return false;
-            }
-
-            bool isShellSizeReady = initializeShellSize(xmlDoc.DocumentElement);
-            if(isShellSizeReady)
-            {
-                _shellSizeChangedEvent.Publish(ShellSize);
-
-                ShellName = shellName;
-                return await initializeCharacterParameters(xmlDoc.DocumentElement);
-            }
-
-            return false;
+            return String.Join('-', targetPartTypes.Select(pt => _dicShellPartModel[pt].FileName.Replace(".png", "")));
         }
+
+        
+
 
         private bool initializeShellSize(XmlElement rootEle)
         {
@@ -348,65 +334,56 @@ namespace GhostInTheShell.Modules.Shell
             }
         }
 
-        private async Task<bool> initializeCharacterParameters(XmlElement rootEle)
+        /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="XmlException"></exception>
+        private (IDictionary<ShellPartType, string>, IEnumerable<AccessoryAddPair>) initializeCharacterParameters(XmlElement rootEle)
         {
             XmlNode? charNode = rootEle.SelectSingleNode("/ShellInitializeInfo/ShellBasicStatus");
             if(charNode is null)
-            {
-                _logger.Log(LogLevel.Error, "NotFound: ShellBasicStatusNode");
-                return false;
-            }
+                throw new KeyNotFoundException("ShellBasicStatusNode");
 
-            try
-            {
-                var dicPartColor = charNode
+            var dicPartColor = charNode
                     .SelectNodes("./PartColor")?
                     .Cast<XmlNode>()
                     .Select(createColorParameter)
                     .Where(kvp => kvp is not null);
 
-                if(dicPartColor != null)
-                {
-                    foreach(var partColor in dicPartColor)
-                        _dicShellPartColor.Add(partColor!.Value.Key, partColor!.Value.Value);
-                }
-
-                var dicAccessoryColor = charNode
-                    .SelectNodes("./AccessoryColor")?
-                    .Cast<XmlNode>()
-                    .Select(createColorParameter)
-                    .Where(kvp => kvp is not null);
-
-                if (dicAccessoryColor != null)
-                {
-                    foreach (var partColor in dicAccessoryColor)
-                        _dicShellPartColor.Add(partColor!.Value.Key, partColor!.Value.Value);
-                }
-
-                var dicPart = charNode
-                    .SelectNodes("./PartLabel")?
-                    .Cast<XmlNode>()
-                    .Select(createPartParameter)
-                    .Where(kvp => kvp is not null)
-                    .ToDictionary(kvp => kvp!.Value.Key, kvp => kvp!.Value.Value);
-
-                var accessoryPairs = charNode
-                    .SelectNodes("./AccessoryLabel")?
-                    .Cast<XmlNode>()
-                    .Select(createPartParameter)
-                    .Where(kvp => kvp is not null)
-                    .Select(kvp => new AccessoryAddPair(kvp!.Value.Key, kvp.Value.Value))
-                    .ToArray();
-
-                await ChangeShell(dicPart, accessoryPairs);
-
-                return true;
-            }
-            catch(Exception ex)
+            if (dicPartColor != null)
             {
-                _logger.Log(LogLevel.Error, ex.Message);
-                return false;
+                foreach (var partColor in dicPartColor)
+                    _dicShellPartColor.Add(partColor!.Value.Key, partColor!.Value.Value);
             }
+
+            var dicAccessoryColor = charNode
+                .SelectNodes("./AccessoryColor")?
+                .Cast<XmlNode>()
+                .Select(createColorParameter)
+                .Where(kvp => kvp is not null);
+
+            if (dicAccessoryColor != null)
+            {
+                foreach (var partColor in dicAccessoryColor)
+                    _dicShellPartColor.Add(partColor!.Value.Key, partColor!.Value.Value);
+            }
+
+            var dicPart = charNode
+                .SelectNodes("./PartLabel")?
+                .Cast<XmlNode>()
+                .Select(createPartParameter)
+                .Where(kvp => kvp is not null)
+                .ToDictionary(kvp => kvp!.Value.Key, kvp => kvp!.Value.Value);
+
+            var accessoryPairs = charNode
+                .SelectNodes("./AccessoryLabel")?
+                .Cast<XmlNode>()
+                .Select(createPartParameter)
+                .Where(kvp => kvp is not null)
+                .Select(kvp => new AccessoryAddPair(kvp!.Value.Key, kvp.Value.Value))
+                .ToArray();
+
+            //await ChangeShell(dicPart, accessoryPairs);
+
+            return (dicPart!, accessoryPairs!);
 
             KeyValuePair<ShellPartType, string>? createPartParameter(XmlNode partNode)
             {
@@ -542,43 +519,10 @@ namespace GhostInTheShell.Modules.Shell
             //_dicShellPartModel.Add(partType, newModel);
             return (partType, newModel);
         }
+
+        public abstract Task<bool> InitializeAsync(string shellName);
     }
-    public class CharacterLocalService : CharacterServiceBase
-    {
-        const string TableRootSectionName = "Shell:Local:TableRoot";
 
-        readonly ILogger _logger;
-        readonly string _tableRoot;
-
-        public CharacterLocalService(ILogger<CharacterLocalService> logger, IEventAggregator eventAggregator, IConfiguration config, IShellModelFactory modelFac, IShellMaterialFactory matFac)
-            : base(logger, eventAggregator, config, modelFac, matFac)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _tableRoot = config?.GetSection(TableRootSectionName).Value ?? throw new KeyNotFoundException(TableRootSectionName);
-        }
-
-        protected override async Task<Stream?> ReadTableStreamAsync(string shellName)
-        {
-            string initTablePath = $"{_tableRoot}{shellName}/InitializeTable.xml";
-
-            try
-            {
-                if (!File.Exists(initTablePath))
-                {
-                    _logger.Log(LogLevel.Critical, $"NotFound: {initTablePath}");
-                    return null;
-                }
-
-                Stream xmlStream = File.OpenRead(initTablePath);
-                return await Task.FromResult(xmlStream);
-            }
-            catch (Exception ex)
-            {
-                _logger.Log(LogLevel.Critical, ex.Message);
-                return null;
-            }
-        }
-    }
     public class CharacterRemoteService : CharacterServiceBase
     {
         const string TableRootSectionName = "Shell:Remote:TableRoot";
@@ -594,6 +538,26 @@ namespace GhostInTheShell.Modules.Shell
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             _tableRoot = config?.GetSection(TableRootSectionName).Value ?? throw new KeyNotFoundException(TableRootSectionName);
+        }
+
+        public override async Task<bool> InitializeAsync(string shellName)
+        {
+            try
+            {
+                (IDictionary<ShellPartType, string> dicPart, IEnumerable<AccessoryAddPair> accPairs) = await base.InitializeBaseAsync(shellName);
+
+#pragma warning disable CS4014 // 이 호출을 대기하지 않으므로 호출이 완료되기 전에 현재 메서드가 계속 실행됩니다.
+                ChangeShell(dicPart, accPairs);
+#pragma warning restore CS4014 // 이 호출을 대기하지 않으므로 호출이 완료되기 전에 현재 메서드가 계속 실행됩니다.
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                _logger.Log(LogLevel.Error, ex.Message);
+                return false;
+            }
+            
         }
 
         protected override async Task<Stream?> ReadTableStreamAsync(string shellName)

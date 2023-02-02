@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GhostInTheShell.Modules.Shell
+namespace GhostInTheShell.Modules.ShellInfra
 {
     //public enum ShellModelFactoryMode { Local, Remote }
     public enum ShellModelType { Accessory, Cloth, Eye, Face, Hair, Head, Underwear }

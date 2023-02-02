@@ -1,5 +1,5 @@
-﻿using GhostInTheShell.Modules.Shell;
-using GhostInTheShell.Modules.Shell.Models;
+﻿using GhostInTheShell.Modules.ShellInfra;
+using GhostInTheShell.Modules.ShellInfra.Models;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
