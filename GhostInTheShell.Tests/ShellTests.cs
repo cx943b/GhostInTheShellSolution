@@ -1,5 +1,5 @@
-﻿using GhostInTheShell.Modules.Shell;
-using GhostInTheShell.Modules.Shell.Models;
+﻿using GhostInTheShell.Modules.ShellInfra;
+using GhostInTheShell.Modules.ShellInfra.Models;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -55,10 +55,10 @@ namespace GhostInTheShell.Tests
         [TestMethod]
         public async Task TableTest()
         {
-            var logger = LoggerMockFactory.CreateLogger<ShellModelFactory>();
+            var logger = LoggerMockFactory.CreateLogger<ShellModelRemoteFactory>();
             HttpClient client = new HttpClient();
 
-            ShellModelFactory modelFac = new ShellModelFactory(logger, _config, client);
+            ShellModelRemoteFactory modelFac = new ShellModelRemoteFactory(logger, _config, client);
 
             bool isTableReady = await modelFac.InitializeAsync(ShellName);
             Assert.IsTrue(isTableReady);
@@ -69,7 +69,7 @@ namespace GhostInTheShell.Tests
         {
             HttpClient client = new HttpClient();
 
-            ShellModelFactory modelFac = new ShellModelFactory(LoggerMockFactory.CreateLogger<ShellModelFactory>(), _config, client);
+            ShellModelRemoteFactory modelFac = new ShellModelRemoteFactory(LoggerMockFactory.CreateLogger<ShellModelRemoteFactory>(), _config, client);
             bool isTableReady = await modelFac.InitializeAsync(ShellName);
             
             Assert.IsTrue(isTableReady);
@@ -84,7 +84,7 @@ namespace GhostInTheShell.Tests
 
             Assert.IsNotNull(clothModel);
 
-            ShellMaterialFactory matFac = new ShellMaterialFactory(LoggerMockFactory.CreateLogger<ShellMaterialFactory>(), _config, client);
+            ShellMaterialRemoteFactory matFac = new ShellMaterialRemoteFactory(LoggerMockFactory.CreateLogger<ShellMaterialRemoteFactory>(), _config, client);
             bool isStockingMaterialReady = await matFac.LoadMaterial(ShellName, stockingModel);
             bool isClothMaterialReady = await matFac.LoadMaterial(ShellName, clothModel);
 

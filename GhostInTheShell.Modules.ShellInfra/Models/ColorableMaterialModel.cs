@@ -5,8 +5,9 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GhostInTheShell.Modules.InfraStructure;
 
-namespace GhostInTheShell.Modules.Shell.Models
+namespace GhostInTheShell.Modules.ShellInfra.Models
 {
 
     [Serializable]
@@ -14,11 +15,11 @@ namespace GhostInTheShell.Modules.Shell.Models
     {
         readonly int _width, _height;
 
-        float _h, _s, _l;
+        Hsl? _hslColor = null;
         bool _IsUseColor = false;
-        Bitmap _colorBitmap;
+        Bitmap? _colorBitmap;
 
-        public override Bitmap ImageData => _IsUseColor ? _colorBitmap : _bitmap;
+        public override Bitmap ImageData => _colorBitmap ?? _bitmap;
         public bool IsUseColor
         {
             get => _IsUseColor;
@@ -51,25 +52,26 @@ namespace GhostInTheShell.Modules.Shell.Models
             base.Dispose();
         }
 
-        public void ChangeColor(float h, float s, float l)
+        public bool ChangeColor(Hsl hslColor)
         {
-            _h = h;
-            _s = s;
-            _l = l;
+            if(hslColor is null)
+                throw new ArgumentNullException(nameof(hslColor));
 
+            _hslColor = hslColor;
             _IsUseColor = true;
 
-            applyColor();
+            return applyColor();
         }
         public void ChangeDefaultColor()
         {
+            _hslColor= null;
             _IsUseColor = false;
 
             _colorBitmap?.Dispose();
             _colorBitmap = null;
         }
 
-        private void applyColor()
+        private bool applyColor()
         {
             if (_colorBitmap == null)
             {
@@ -77,15 +79,15 @@ namespace GhostInTheShell.Modules.Shell.Models
                 _colorBitmap.SetResolution(96.0f, 96.0f);
             }
 
-
-            Rectangle rect = new Rectangle(0, 0, _width, _height);
-            BitmapData bitData = _bitmap.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-            BitmapData colorBitData = _colorBitmap.LockBits(rect, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-
-            //ImageProcessing.HslProcess(bitData, colorBitData, _h, _s, _l);
-
-            _colorBitmap.UnlockBits(colorBitData);
-            _bitmap.UnlockBits(bitData);
+            try
+            {
+                _colorBitmap = HslConverter.ColorChangeByHsl(_bitmap, _hslColor!.H, _hslColor.S, _hslColor.L);
+                return true;
+            }
+            catch(Exception ex)
+            {
+                return false;
+            }
         }
     }
 }

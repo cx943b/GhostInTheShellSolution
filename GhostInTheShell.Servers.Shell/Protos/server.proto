@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option csharp_namespace = "GhostInTheShell.Servers.Shell";
+
+package server;
+
+service CharacterServer {
+	rpc GetCharacterImage (CharacterRequest) returns (CharacterResponse);
+}
+
+message CharacterRequest {
+	string headLabel = 1;
+	string eyeLabel = 2;
+	string faceLabel = 3;
+}
+
+message CharacterResponse {
+	bool IsOk = 1;
+	string message = 2;
+	bytes imageBytes = 3;
+}

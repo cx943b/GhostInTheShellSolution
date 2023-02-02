@@ -28,7 +28,8 @@ namespace GhostInTheShell.Tests
                     var invokeMethod = formatter.GetType().GetMethod("Invoke");
                     var logMessage = (string)invokeMethod?.Invoke(formatter, new[] { state, exception });
 
-                    Trace.WriteLine($"{logLevel}: {logMessage}");
+                    if(logLevel is not LogLevel.Information)
+                        Trace.WriteLine($"{logLevel}: {logMessage}");
                 }));
 
             return mkLogger.Object;
