@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="..\GhostInTheShell.Servers.Shell\Protos\server.proto" GrpcServices="Client">
+    <Protobuf Include="..\..\GhostInTheShell.Servers.Shell\Protos\server.proto" GrpcServices="Client">
       <Link>Protos\server.proto</Link>
     </Protobuf>
   </ItemGroup>
