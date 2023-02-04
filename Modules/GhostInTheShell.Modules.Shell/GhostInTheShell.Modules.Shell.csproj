@@ -15,8 +15,4 @@
     <ProjectReference Include="..\GhostInTheShell.Modules.ShellInfra\GhostInTheShell.Modules.ShellInfra.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Views\" />
-  </ItemGroup>
-
 </Project>
