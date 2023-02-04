@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace GhostInTheShell.Modules.Shell
+namespace GhostInTheShell.Modules.Shell.Views
 {
     /// <summary>
-    /// Interaction logic for UserControl1.xaml
+    /// ShellView.xaml에 대한 상호 작용 논리
     /// </summary>
-    public partial class UserControl1 : UserControl
+    public partial class ShellView : UserControl
     {
-        public UserControl1()
+        public ShellView()
         {
             InitializeComponent();
         }

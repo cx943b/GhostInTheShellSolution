@@ -6,4 +6,17 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Prism.Wpf" Version="8.1.97" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GhostInTheShell.Modules.InfraStructure\GhostInTheShell.Modules.InfraStructure.csproj" />
+    <ProjectReference Include="..\GhostInTheShell.Modules.ShellInfra\GhostInTheShell.Modules.ShellInfra.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Views\" />
+  </ItemGroup>
+
 </Project>
