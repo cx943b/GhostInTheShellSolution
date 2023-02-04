@@ -7,17 +7,19 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GhostInTheShell", "GhostInT
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{E79948C9-7853-4265-A1FA-EB82E3BE7F06}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GhostInTheShell.Modules.Script", "GhostInTheShell.Modules.Script\GhostInTheShell.Modules.Script.csproj", "{7714661D-EDBD-4787-9700-B99765050B62}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GhostInTheShell.Modules.Script", "Modules\GhostInTheShell.Modules.Script\GhostInTheShell.Modules.Script.csproj", "{7714661D-EDBD-4787-9700-B99765050B62}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GhostInTheShell.Tests", "GhostInTheShell.Tests\GhostInTheShell.Tests.csproj", "{192EAE7D-1FF9-465E-8BFD-476048296629}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GhostInTheShell.Modules.InfraStructure", "GhostInTheShell.Modules.InfraStructure\GhostInTheShell.Modules.InfraStructure.csproj", "{DD9F39E7-0CC6-424D-B544-FDB0858137FD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GhostInTheShell.Modules.InfraStructure", "Modules\GhostInTheShell.Modules.InfraStructure\GhostInTheShell.Modules.InfraStructure.csproj", "{DD9F39E7-0CC6-424D-B544-FDB0858137FD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GhostInTheShell.Modules.ShellInfra", "GhostInTheShell.Modules.ShellInfra\GhostInTheShell.Modules.ShellInfra.csproj", "{5B970B9B-B9AB-48E2-B277-2FB6FA8F2E86}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GhostInTheShell.Modules.ShellInfra", "Modules\GhostInTheShell.Modules.ShellInfra\GhostInTheShell.Modules.ShellInfra.csproj", "{5B970B9B-B9AB-48E2-B277-2FB6FA8F2E86}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Servers", "Servers", "{0D656812-5869-401F-AF46-3C0111BF35EF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GhostInTheShell.Servers.Shell", "GhostInTheShell.Servers.Shell\GhostInTheShell.Servers.Shell.csproj", "{6F826041-22BB-4729-B448-A7C737966569}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GhostInTheShell.Modules.Shell", "Modules\GhostInTheShell.Modules.Shell\GhostInTheShell.Modules.Shell.csproj", "{1227A859-3BDD-434D-9C0C-3EAFB925CBFE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,6 +51,10 @@ Global
 		{6F826041-22BB-4729-B448-A7C737966569}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F826041-22BB-4729-B448-A7C737966569}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F826041-22BB-4729-B448-A7C737966569}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1227A859-3BDD-434D-9C0C-3EAFB925CBFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1227A859-3BDD-434D-9C0C-3EAFB925CBFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1227A859-3BDD-434D-9C0C-3EAFB925CBFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1227A859-3BDD-434D-9C0C-3EAFB925CBFE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -58,6 +64,7 @@ Global
 		{DD9F39E7-0CC6-424D-B544-FDB0858137FD} = {E79948C9-7853-4265-A1FA-EB82E3BE7F06}
 		{5B970B9B-B9AB-48E2-B277-2FB6FA8F2E86} = {E79948C9-7853-4265-A1FA-EB82E3BE7F06}
 		{6F826041-22BB-4729-B448-A7C737966569} = {0D656812-5869-401F-AF46-3C0111BF35EF}
+		{1227A859-3BDD-434D-9C0C-3EAFB925CBFE} = {E79948C9-7853-4265-A1FA-EB82E3BE7F06}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A28C035F-9BFC-4A05-84C8-21076377496F}
