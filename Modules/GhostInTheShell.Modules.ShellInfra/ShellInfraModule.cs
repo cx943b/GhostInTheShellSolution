@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace GhostInTheShell.Modules.ShellInfra
 {
-    public sealed class ShellModule : IModule
+    public sealed class ShellInfraModule : IModule
     {
         const string FactoryTypeSection = "ShellData:FactoryType";
         const string ShellNameSection = "ShellData:Name";

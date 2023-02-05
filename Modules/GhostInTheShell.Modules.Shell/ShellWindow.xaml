@@ -10,7 +10,7 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type={x:Type localVm:ShellViewModel}}"
         Title="ShellWindow"
-        Background="{x:Null}" AllowsTransparency="True" WindowStyle="None"
+        Background="{x:Null}" AllowsTransparency="True" WindowStyle="None" ShowInTaskbar="False"
 
         Height="{Binding ImageSize.Height, FallbackValue=200}"
         Width="{Binding ImageSize.Width, FallbackValue=200}">

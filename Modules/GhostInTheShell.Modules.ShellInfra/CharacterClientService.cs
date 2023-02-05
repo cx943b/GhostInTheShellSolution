@@ -11,9 +11,10 @@ using Microsoft.Extensions.Logging;
 
 namespace GhostInTheShell.Modules.ShellInfra
 {
-    public class CharacterClientService
+    
+    public class CharacterClientService : ICharacterClientService
     {
-        readonly ILogger<CharacterClientService> _logger;
+        readonly ILogger _logger;
         readonly CharacterServer.CharacterServerClient _grpcClient;
         
 
@@ -25,16 +26,32 @@ namespace GhostInTheShell.Modules.ShellInfra
             _grpcClient = new CharacterServer.CharacterServerClient(channel);
         }
 
-        public async Task<byte[]?> RequestCharacterImage(string headLabel, string eyeLabel, string faceLabel)
+        public async Task<Size> RequestCharacterSize()
         {
-            CharacterRequest charReq = new CharacterRequest();
+            var emptyReq = new Google.Protobuf.WellKnownTypes.Empty();
+
+            try
+            {
+                var sizeRes = await _grpcClient.GetCharacterSizeAsync(emptyReq);
+                return new Size(sizeRes.Width, sizeRes.Height);
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, ex.Message);
+                return Size.Empty;
+            }
+        }
+
+        public async Task<byte[]?> RequestCharacterImage(string headLabel, string eyeLabel, string faceLabel)
+        { 
+            CharacterImageRequest charReq = new CharacterImageRequest();
             charReq.HeadLabel = headLabel;
             charReq.EyeLabel = eyeLabel;
             charReq.FaceLabel = faceLabel;
 
             try
             {
-                CharacterResponse charRes = await _grpcClient.GetCharacterImageAsync(charReq);
+                CharacterImageResponse charRes = await _grpcClient.GetCharacterImageAsync(charReq);
                 if (!charRes.IsOk)
                 {
                     _logger.Log(LogLevel.Error, $"BadRes: HeadLabel-{headLabel}, EyeLabel-{eyeLabel}, FaceLabel-{faceLabel}\r\n\t{charRes.Message}");

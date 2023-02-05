@@ -2,16 +2,20 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
 using GhostInTheShell.Modules.InfraStructure;
 using GhostInTheShell.Modules.Script;
+using GhostInTheShell.Modules.Shell;
+using GhostInTheShell.Modules.ShellInfra;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 using Prism;
+using Prism.Events;
 using Prism.Ioc;
 using Prism.Modularity;
 using Prism.Regions;
@@ -32,12 +36,65 @@ namespace GhostInTheShell
             shell.Show();
         }
 
-        protected override void InitializeModules()
+        protected override async void InitializeModules()
         {
             base.InitializeModules();
 
             var regionMgr = Container.Resolve<RegionManager>();
             regionMgr.RegisterViewWithRegion<Views.MainView>(WellknownRegionNames.MainViewRegion);
+
+            var shellWindow = Container.Resolve<ShellWindow>();
+            shellWindow.Show();
+
+
+            // Error
+            //var mainWindow = Container.Resolve<MainWindow>();
+            //shellWindow.Owner = mainWindow;
+
+
+            var charClientSvc = Container.Resolve<ICharacterClientService>();
+
+
+            // InitSize
+            var shellSize = await charClientSvc.RequestCharacterSize();
+
+            if (shellSize == System.Drawing.Size.Empty)
+                throw new InvalidOperationException("InvalidRes: ShellSize");
+
+            shellWindow.Width = shellSize.Width;
+            shellWindow.Height = shellSize.Height;
+            shellWindow.Left = SystemParameters.WorkArea.Width - shellSize.Width;
+            shellWindow.Top = SystemParameters.WorkArea.Height - shellSize.Height;
+            // InitSize
+
+            // InitImage
+            var eventAggr = Container.Resolve<IEventAggregator>();
+            eventAggr.GetEvent<ShellSizeChangedEvent>().Publish(shellSize);
+
+            var imgBytes = await charClientSvc.RequestCharacterImage("부끄럼0", "중간-무광", "미소");
+            
+            if(imgBytes is null)
+                throw new NullReferenceException(nameof(imgBytes));
+
+            eventAggr.GetEvent<MaterialCollectionChangedEvent>().Publish(new System.IO.MemoryStream(imgBytes));
+            // InitImage
+
+
+
+            eventAggr.GetEvent<ShellChangeScriptCommandEvent>().Subscribe(onShellChangeExecute, ThreadOption.UIThread);
+        }
+
+        private async void onShellChangeExecute(ShellChangeScriptCommandEventArgs e)
+        {
+            var charClientSvc = Container.Resolve<ICharacterClientService>();
+
+            var imgBytes = await charClientSvc.RequestCharacterImage(e.HeadLabel, e.EyeLabel, e.FaceLabel);
+
+            if (imgBytes is null)
+                throw new NullReferenceException(nameof(imgBytes));
+
+            var eventAggr = Container.Resolve<IEventAggregator>();
+            eventAggr.GetEvent<MaterialCollectionChangedEvent>().Publish(new System.IO.MemoryStream(imgBytes));
         }
 
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
@@ -45,6 +102,7 @@ namespace GhostInTheShell
             base.ConfigureModuleCatalog(moduleCatalog);
 
             moduleCatalog.AddModule<ScriptModule>();
+            moduleCatalog.AddModule<ShellModule>();
         }
 
         
@@ -75,7 +133,7 @@ namespace GhostInTheShell
                 });
             });
 
-            //containerRegistry.Register(typeof(ILogger<>), typeof(Logger<>));
+            containerRegistry.Register(typeof(ILogger<>), typeof(Logger<>));
         }
     }
 }

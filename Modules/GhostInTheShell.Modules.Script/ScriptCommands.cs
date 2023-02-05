@@ -2,21 +2,6 @@
 
 namespace GhostInTheShell.Modules.Script
 {
-    public enum ScriptCommandChar
-    {
-        ChangeTalker = (int)'t',
-        ClearWords = (int)'c',
-        PrintWord = (int)' ',
-        Wait = (int)'w'
-    }
-    public enum ScriptCommandType
-    {
-        ChangeTalker,
-        ClearWords,
-        PrintWord,
-        Wait
-    }
-
     public interface IScriptCommand
     {
         ScriptCommandType CommandType { get; }
@@ -24,7 +9,6 @@ namespace GhostInTheShell.Modules.Script
 
     public abstract class ScriptCommandBase : IScriptCommand
     {
-
         public ScriptCommandType CommandType { get; init; }
 
         public ScriptCommandBase(ScriptCommandType commandType)
@@ -59,4 +43,27 @@ namespace GhostInTheShell.Modules.Script
 
         public TalkerChangeScriptCommand(int talkerIndex) : base(ScriptCommandType.ChangeTalker) => TalkerIndex = talkerIndex;
     }
+
+    public sealed class ShellChangeScriptCommand : ScriptCommandBase
+    {
+        public int ImageIndex { get; init; }
+
+        public ShellChangeScriptCommand(int imgIndex) : base(ScriptCommandType.ChangeShell)
+        {
+            ImageIndex = imgIndex;
+        }
+    }
+    //public sealed class ShellChangeScriptCommand : ScriptCommandBase
+    //{
+    //    public string HeadLabel { get; init; }
+    //    public string EyeLabel { get; init; }
+    //    public string FaceLabel { get; init; }
+
+    //    public ShellChangeScriptCommand(string headLabel, string eyeLabel, string faceLabel) : base(ScriptCommandType.ChangeShell)
+    //    {
+    //        FaceLabel = faceLabel;
+    //        EyeLabel = eyeLabel;
+    //        HeadLabel = headLabel;
+    //    }
+    //}
 }

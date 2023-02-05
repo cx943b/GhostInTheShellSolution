@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using GhostInTheShell.Modules.ShellInfra;
+using Microsoft.Extensions.Logging;
 using Prism.Events;
 using System;
 using System.Collections.Generic;
@@ -21,12 +22,20 @@ namespace GhostInTheShell.Modules.Script
 
     public sealed class ScriptService : IScriptService
     {
-        readonly ILogger<ScriptService> _logger;
+        const char ParamStringOpenChar = '[';
+        const char ParamStringCloseChar = ']';
+
+        readonly ILogger _logger;
+        readonly ICharacterClientService _charClientSvc;
 
         readonly ClearWordsScriptCommandEvent _clearWordsScriptCommandEvent;
         readonly PrintWordScriptCommandEvent _printWordScriptCommandEvent;
         readonly TalkerChangeScriptCommandEvent _talkerChangeScriptCommandEvent;
         readonly ScriptExecuteCompletedEvent _scriptExecuteCompletedEvent;
+        readonly ShellChangeScriptCommandEvent _shellChangeScriptCommandEvent;
+        readonly MaterialCollectionChangedEvent _materialCollectionChangedEvent;
+
+        readonly IDictionary<int, MemoryStream> _dicImageStream = new Dictionary<int, MemoryStream>();
 
         readonly PostPositionScriptReplacer _ppScriptReplacer = new PostPositionScriptReplacer();
         readonly Queue<ScriptCommandBase> _quParsedScriptCommand = new Queue<ScriptCommandBase>();
@@ -34,34 +43,49 @@ namespace GhostInTheShell.Modules.Script
         public bool IsRunning { get; private set; }
         public int ScriptCommandPumpInterval { get; private set; } = 30;
 
-        public ScriptService(ILogger<ScriptService> logger, IEventAggregator eventAggregator)
+        public ScriptService(ILogger<ScriptService> logger, IEventAggregator eventAggregator, ICharacterClientService charClientSvc)
         {
             _logger = logger;
+            _charClientSvc = charClientSvc ?? throw new NullReferenceException(nameof(charClientSvc));
 
             _clearWordsScriptCommandEvent = eventAggregator.GetEvent<ClearWordsScriptCommandEvent>();
             _printWordScriptCommandEvent = eventAggregator.GetEvent<PrintWordScriptCommandEvent>();
             _talkerChangeScriptCommandEvent = eventAggregator.GetEvent<TalkerChangeScriptCommandEvent>();
             _scriptExecuteCompletedEvent = eventAggregator.GetEvent<ScriptExecuteCompletedEvent>();
+            _shellChangeScriptCommandEvent = eventAggregator.GetEvent<ShellChangeScriptCommandEvent>();
+            _materialCollectionChangedEvent = eventAggregator.GetEvent<MaterialCollectionChangedEvent>();
         }
 
         public bool ChangeScriptCommandPumpInterval(int interval)
         {
             if (IsRunning)
+            {
+                _logger.Log(LogLevel.Warning, "Can't change ScriptInterval in PumpingQueue");
                 return false;
+            }
 
-            if(interval <= 0) throw new ArgumentOutOfRangeException(nameof(interval));
+            if(interval <= 0)
+            {
+                _logger.Log(LogLevel.Warning, $"OutofRange: {nameof(interval)}");
+                return false;
+            }
 
             ScriptCommandPumpInterval = interval;
             return true;
         }
 
-        public void Execute(string script)
+        public async void Execute(string script)
         {
             string postPositionReplacedScript = _ppScriptReplacer.Replace(script);
-            bool isScriptQueueReady = parseScript(postPositionReplacedScript);
+            bool isScriptQueueReady = await parseScript(postPositionReplacedScript);
 
-            if(isScriptQueueReady)
-                Task.Run(pumpScriptQueue);
+            if(!isScriptQueueReady)
+            {
+                _logger.Log(LogLevel.Warning, $"InvalidScript: {script}");
+                return;
+            }
+
+            Task.Run(pumpScriptQueue);
         }
 
         private void pumpScriptQueue()
@@ -92,19 +116,38 @@ namespace GhostInTheShell.Modules.Script
                             _printWordScriptCommandEvent.Publish(new PrintWordScriptCommandEventArgs(printWordScriptCmd.Word));                            
                             break;
                         }
-
+                    case ShellChangeScriptCommand shellChangeScriptCmd:
+                        {
+                            _materialCollectionChangedEvent.Publish(_dicImageStream[shellChangeScriptCmd.ImageIndex]);
+                            //_shellChangeScriptCommandEvent.Publish(new ShellChangeScriptCommandEventArgs(shellChangeScriptCmd.HeadLabel, shellChangeScriptCmd.EyeLabel, shellChangeScriptCmd.FaceLabel));
+                            break;
+                        }
                 }
 
                 Thread.Sleep(ScriptCommandPumpInterval);
             }
+
+            foreach (Stream stream in _dicImageStream.Values)
+                stream.Dispose();
+
+            _dicImageStream.Clear();
+
+            _logger.Log(LogLevel.Trace, "AfterScriptPump: ClearedImageBuffer");
 
             IsRunning = false;
 
             _scriptExecuteCompletedEvent.Publish();
         }
 
-        private bool parseScript(string script)
+        private async Task<bool> parseScript(string script)
         {
+            foreach (Stream stream in _dicImageStream.Values)
+                stream.Dispose();
+
+            _dicImageStream.Clear();
+            
+            _logger.Log(LogLevel.Trace, "BeforeScriptParse: ClearedImageBuffer");
+
             try
             {
                 string paramStr = "";
@@ -127,18 +170,54 @@ namespace GhostInTheShell.Modules.Script
                                     _quParsedScriptCommand.Enqueue(new ClearWordsScriptCommand());
                                     break;
                                 }
+                            case ScriptCommandChar.ChangeShell:
+                                {
+                                    (paramStr, currentIndex) = catchScriptCommandParameterString(script, scriptIndex);
+                                    if(currentIndex < 0)
+                                    {
+                                        throw new ArgumentException($"ScriptError-InvalidParams: {ScriptCommandChar.ChangeShell}");
+                                    }
+
+                                    string[] charParams = paramStr.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                                    if(charParams.Length == 3)
+                                    {
+                                        byte[]? imgBytes = await _charClientSvc.RequestCharacterImage(charParams[0], charParams[1], charParams[2]);
+                                        if(imgBytes is null)
+                                        {
+                                            throw new ArgumentException($"ScriptError-InvalidResponses: {ScriptCommandChar.ChangeShell}");
+                                        }
+
+                                        int imgIndex = _dicImageStream.Count;
+
+                                        MemoryStream ms = new MemoryStream(imgBytes);
+                                        _dicImageStream.Add(imgIndex, ms);
+
+                                        _quParsedScriptCommand.Enqueue(new ShellChangeScriptCommand(imgIndex));
+                                        scriptIndex = currentIndex;
+                                    }
+                                    else
+                                    {
+                                        throw new ArgumentException($"ScriptError-InvalidParams: {ScriptCommandChar.ChangeShell}");
+                                    }
+                                    
+                                    break;
+                                }
                             case ScriptCommandChar.ChangeTalker:
                                 {
                                     (paramStr, currentIndex) = catchScriptCommandParameterString(script, scriptIndex);
+                                    if (currentIndex < 0)
+                                    {
+                                        throw new ArgumentException($"ScriptError-InvalidParams: {ScriptCommandChar.ChangeTalker}");
+                                    }
 
-                                    if(Int32.TryParse(paramStr, out int talkerIndex))
+                                    if (Int32.TryParse(paramStr, out int talkerIndex))
                                     {
                                         _quParsedScriptCommand.Enqueue(new TalkerChangeScriptCommand(talkerIndex));
                                         scriptIndex = currentIndex;
                                     }
                                     else
                                     {
-                                        throw new ArgumentException("Could't Get TalkerIndex");
+                                        throw new ArgumentException($"ScriptError-InvalidParams: {ScriptCommandChar.ChangeTalker}");
                                     }
                                     
                                     break;
@@ -146,6 +225,10 @@ namespace GhostInTheShell.Modules.Script
                             case ScriptCommandChar.Wait:
                                 {
                                     (paramStr, currentIndex) = catchScriptCommandParameterString(script, scriptIndex);
+                                    if (currentIndex < 0)
+                                    {
+                                        throw new ArgumentException($"ScriptError-InvalidParams: {ScriptCommandChar.Wait}");
+                                    }
 
                                     if (Int32.TryParse(paramStr, out int waitInterval))
                                     {
@@ -154,7 +237,7 @@ namespace GhostInTheShell.Modules.Script
                                     }
                                     else
                                     {
-                                        throw new ArgumentException("Could't Get WaitInterval");
+                                        throw new ArgumentException($"ScriptError-InvalidParams: {ScriptCommandChar.Wait}");
                                     }
 
                                     break;
@@ -166,24 +249,55 @@ namespace GhostInTheShell.Modules.Script
                         _quParsedScriptCommand.Enqueue(new PrintWordScriptCommand(script[scriptIndex].ToString()));
                     }
                 }
+
+                //var taskResults = Task.WhenAll(lstTask.ToArray()).ConfigureAwait(false).GetAwaiter().GetResult();
+                //if(taskResults.Any(r => r == null))
+                //{
+                //    _logger.Log(LogLevel.Warning, $"NullReferences in ShellResponse");
+                //    return false;
+                //}
+
+                //foreach ((byte[] imgBytes, int index) in taskResults.Select((r, i) => (r!, i)))
+                //{
+                //    MemoryStream imgStream = new MemoryStream(imgBytes);
+                //    _dicImageStream.Add(index, imgStream);
+                //}
+
+                _logger.Log(LogLevel.Trace, $"TotalCachedImageBytes: {_dicImageStream.Values.Sum(m => m.Length):n0} bytes");
+
+                _logger.Log(LogLevel.Trace, $"QueuedCount: {_quParsedScriptCommand.Count}");
+
+                return true;
             }
             catch(Exception ex)
             {
+                _logger.Log(LogLevel.Warning, ex.Message);
+
+                foreach (var imgStream in _dicImageStream.Values)
+                    imgStream.Dispose();
+
+                _dicImageStream.Clear();
+                _logger.Log(LogLevel.Trace, "ErrorInScriptParse: ClearedImageBuffer");
+
                 return false;
             }
-            
-            _logger.LogTrace($"QueuedCount: {_quParsedScriptCommand.Count}");
-
-            return true;
         }
 
         private (string parameterStr, int currentIndex) catchScriptCommandParameterString(string script, int startIndex)
         {
-            const char openChar = '[';
-            const char closeChar = ']';
+            int openIndex = script.IndexOf(ParamStringOpenChar, startIndex);
+            if(openIndex < 0)
+            {
+                _logger.Log(LogLevel.Warning, "NotFound: OpenBraketIndex");
+                return (String.Empty, -1);
+            }
 
-            int openIndex = script.IndexOf(openChar, startIndex);
-            int closeIndex = script.IndexOf(closeChar, openIndex + 1);
+            int closeIndex = script.IndexOf(ParamStringCloseChar, openIndex + 1);
+            if (closeIndex < 0)
+            {
+                _logger.Log(LogLevel.Warning, "NotFound: CloseBraketIndex");
+                return (String.Empty, -1);
+            }
 
             return (script.Substring(openIndex + 1, closeIndex - openIndex - 1), closeIndex);
         }

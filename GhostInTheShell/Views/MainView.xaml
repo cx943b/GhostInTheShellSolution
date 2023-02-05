@@ -9,8 +9,11 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     
-    <StackPanel>
-        <TextBlock Text="{Binding Text}"/>
-        <Button Content="ExecuteScript" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="6 12" Command="{Binding ExecuteCommand, Mode=OneTime}" />
-    </StackPanel>
+    <DockPanel LastChildFill="False">
+        <Button DockPanel.Dock="Bottom" Content="ExecuteScript" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="6 12" Command="{Binding ExecuteCommand, Mode=OneTime}" />
+        <TextBox DockPanel.Dock="Bottom" Text="{Binding InputScript, UpdateSourceTrigger=PropertyChanged}" Margin="6 12"/>
+
+        <TextBlock DockPanel.Dock="Top" Margin="6" Text="{Binding Text}"/>
+        
+    </DockPanel>
 </UserControl>

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 using GhostInTheShell.Modules.InfraStructure;
 using GhostInTheShell.Modules.Shell.Views;
+using GhostInTheShell.Modules.ShellInfra;
 
 namespace GhostInTheShell.Modules.Shell
 {
@@ -22,6 +23,7 @@ namespace GhostInTheShell.Modules.Shell
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
+            containerRegistry.RegisterSingleton<ICharacterClientService, CharacterClientService>();
             containerRegistry.RegisterDialogWindow<ShellWindow>();
         }
     }

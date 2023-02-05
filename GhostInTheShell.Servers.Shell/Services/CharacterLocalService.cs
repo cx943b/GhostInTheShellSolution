@@ -6,7 +6,7 @@ using System.Drawing.Imaging;
 
 namespace GhostInTheShell.Servers.Shell.Services
 {
-    public interface ICharacterLocalService : ICharacterService
+    public interface ICharacterLocalService : ICharacterService, ICharacter
     {
         Task<(byte[]?, string)> GetCharacterImage(string headLabel, string eyeLabel, string faceLabel);
     }
@@ -15,7 +15,6 @@ namespace GhostInTheShell.Servers.Shell.Services
         const string TableRootSectionName = "Shell:Local:TableRoot";
         //readonly string _saveFileRootPath = "D:\\Roots\\ServiceRoot\\gRPC\\SavedImages";
 
-        readonly HttpClient _client;
         readonly ILogger _logger;
         readonly IShellModelFactory _modelFac;
         readonly string _tableRoot;
@@ -29,7 +28,6 @@ namespace GhostInTheShell.Servers.Shell.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _modelFac = modelFac;
             _tableRoot = config?.GetSection(TableRootSectionName).Value ?? throw new KeyNotFoundException(TableRootSectionName);
-            _client = client;
 
             _dicLabels = new ShellPartType[] { ShellPartType.Head, ShellPartType.Eye, ShellPartType.Face }
                     .Select(pt => new KeyValuePair<ShellPartType, IEnumerable<string>>(pt, _modelFac.GetLabels(pt)))

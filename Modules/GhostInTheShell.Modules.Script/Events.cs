@@ -11,6 +11,7 @@ namespace GhostInTheShell.Modules.Script
     public class ClearWordsScriptCommandEvent : PubSubEvent { }
     public class PrintWordScriptCommandEvent : PubSubEvent<PrintWordScriptCommandEventArgs> { }
     public class TalkerChangeScriptCommandEvent : PubSubEvent<TalkerChangeScriptCommandEventArgs> { }
+    public class ShellChangeScriptCommandEvent : PubSubEvent<ShellChangeScriptCommandEventArgs> { }
 
     // --
 
@@ -25,5 +26,18 @@ namespace GhostInTheShell.Modules.Script
         public int TalkerIndex { get; init; }
 
         public TalkerChangeScriptCommandEventArgs(int talkerIndex) => TalkerIndex = talkerIndex;
+    }
+    public class ShellChangeScriptCommandEventArgs : EventArgs
+    {
+        public string HeadLabel { get; init; }
+        public string EyeLabel { get; init; }
+        public string FaceLabel { get; init; }
+
+        public ShellChangeScriptCommandEventArgs(string headLabel, string eyeLabel, string faceLabel)
+        {
+            HeadLabel = headLabel;
+            EyeLabel = eyeLabel;
+            FaceLabel = faceLabel;
+        }
     }
 }

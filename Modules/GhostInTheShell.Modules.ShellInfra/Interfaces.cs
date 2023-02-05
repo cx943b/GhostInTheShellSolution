@@ -29,7 +29,11 @@ namespace GhostInTheShell.Modules.ShellInfra
     //    Task<XmlReader> RequestTableAsync(string shellName, string tableName);
     //}
 
-
+    public interface ICharacterClientService
+    {
+        Task<byte[]?> RequestCharacterImage(string headLabel, string eyeLabel, string faceLabel);
+        Task<Size> RequestCharacterSize();
+    }
     public interface ICharacterService
     {
         Task AddAccessories(IEnumerable<AccessoryAddPair> dicAccessoryParts);
