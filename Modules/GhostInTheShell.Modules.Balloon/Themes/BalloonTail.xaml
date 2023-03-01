@@ -1,0 +1,147 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:localCtrl="clr-namespace:GhostInTheShell.Modules.Balloon.Controls">
+    
+    <Style x:Key="BalloonTailPath" TargetType="{x:Type Path}">
+        <Setter Property="Width" Value="20"/>
+        <Setter Property="Height" Value="20"/>
+        <Setter Property="Fill" Value="Gray"/>
+        <Setter Property="Stroke" Value="Black"/>
+    </Style>
+
+    <ControlTemplate x:Key="BalloonTailRightKey" TargetType="localCtrl:BalloonTail">
+        <Canvas x:Name="PART_Canvas" Background="{TemplateBinding Background}" Margin="0 20">
+            <Path x:Name="PART_TailPath" Canvas.Left="0" Canvas.Top="20" Width="{TemplateBinding Width}" Style="{StaticResource BalloonTailPath}">
+                <Path.Data>
+                    <PathGeometry>
+                        <PathFigure IsFilled="True" StartPoint="0 0">
+                            <LineSegment Point="20 10" IsStroked="True"/>
+                            <LineSegment Point="0 20" IsStroked="True"/>
+                        </PathFigure>
+                    </PathGeometry>
+                </Path.Data>
+            </Path>
+        </Canvas>
+    </ControlTemplate>
+    <ControlTemplate x:Key="BalloonTailLeftKey" TargetType="localCtrl:BalloonTail">
+        <Canvas x:Name="PART_Canvas" Background="{TemplateBinding Background}" Margin="0 20">
+            <Path x:Name="PART_TailPath" Canvas.Left="0" Canvas.Top="20" Width="{TemplateBinding Width}" Style="{StaticResource BalloonTailPath}">
+                <Path.Data>
+                    <PathGeometry>
+                        <PathFigure IsFilled="True" StartPoint="20 0">
+                            <LineSegment Point="0 10" IsStroked="True"/>
+                            <LineSegment Point="20 20" IsStroked="True"/>
+                        </PathFigure>
+                    </PathGeometry>
+                </Path.Data>
+            </Path>
+        </Canvas>
+    </ControlTemplate>
+    <ControlTemplate x:Key="BalloonTailTopKey" TargetType="localCtrl:BalloonTail">
+        <Canvas x:Name="PART_Canvas" Background="{TemplateBinding Background}" Margin="20 0">
+            <Path x:Name="PART_TailPath" Canvas.Left="20" Canvas.Top="0" Height="{TemplateBinding Height}" Style="{StaticResource BalloonTailPath}">
+                <Path.Data>
+                    <PathGeometry>
+                        <PathFigure IsFilled="True" StartPoint="0 20">
+                            <LineSegment Point="10 0" IsStroked="True"/>
+                            <LineSegment Point="20 20" IsStroked="True"/>
+                        </PathFigure>
+                    </PathGeometry>
+                </Path.Data>
+            </Path>
+        </Canvas>
+    </ControlTemplate>
+    <ControlTemplate x:Key="BalloonTailBottomKey" TargetType="localCtrl:BalloonTail">
+        <Canvas x:Name="PART_Canvas" Background="{TemplateBinding Background}" Margin="20 0">
+            <Path x:Name="PART_TailPath" Canvas.Left="20" Canvas.Top="0" Height="{TemplateBinding Height}" Style="{StaticResource BalloonTailPath}">
+                <Path.Data>
+                    <PathGeometry>
+                        <PathFigure IsFilled="True" StartPoint="0 0">
+                            <LineSegment Point="10 20" IsStroked="True"/>
+                            <LineSegment Point="20 0" IsStroked="True"/>
+                        </PathFigure>
+                    </PathGeometry>
+                </Path.Data>
+            </Path>
+        </Canvas>
+    </ControlTemplate>
+    
+    <Style TargetType="{x:Type localCtrl:BalloonTail}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="TailPosition" Value="50"/>
+        <Setter Property="Width" Value="20"/>
+        <Setter Property="Height" Value="20"/>
+        
+        <Style.Triggers>
+            <Trigger Property="TailDirection" Value="Left">
+                <Setter Property="Template" Value="{StaticResource BalloonTailLeftKey}"/>
+                <Setter Property="Margin" Value="0 0 -2 0"/>
+            </Trigger>
+            <Trigger Property="TailDirection" Value="Right">
+                <Setter Property="Template" Value="{StaticResource BalloonTailRightKey}"/>
+                <Setter Property="Margin" Value="-2 0 0 0"/>
+            </Trigger>
+            <Trigger Property="TailDirection" Value="Top">
+                <Setter Property="Template" Value="{StaticResource BalloonTailTopKey}"/>
+                <Setter Property="Margin" Value="0 0 0 -2"/>
+            </Trigger>
+            <Trigger Property="TailDirection" Value="Bottom">
+                <Setter Property="Template" Value="{StaticResource BalloonTailBottomKey}"/>
+                <Setter Property="Margin" Value="0 -2 0 0"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="BalloonTailHorizontalStyleKey" TargetType="{x:Type localCtrl:BalloonTail}" BasedOn="{StaticResource {x:Type localCtrl:BalloonTail}}">
+        <Setter Property="LayoutTransform">
+            <Setter.Value>
+                <ScaleTransform ScaleX="0" />
+            </Setter.Value>
+        </Setter>
+            
+        <Style.Triggers>
+            <Trigger Property="IsDirecting" Value="True">
+                <Trigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(Control.LayoutTransform).(ScaleTransform.ScaleX)" To="1" DecelerationRatio="1" Duration="0:0:0.3" BeginTime="0:0:0.3" />
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(Control.LayoutTransform).(ScaleTransform.ScaleX)" To="0" AccelerationRatio="1" Duration="0:0:0.3"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.ExitActions>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="BalloonTailVerticalStyleKey" TargetType="{x:Type localCtrl:BalloonTail}" BasedOn="{StaticResource {x:Type localCtrl:BalloonTail}}">
+        <Setter Property="LayoutTransform">
+            <Setter.Value>
+                <ScaleTransform ScaleY="0" />
+            </Setter.Value>
+        </Setter>
+
+        <Style.Triggers>
+            <Trigger Property="IsDirecting" Value="True">
+                <Trigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(Control.LayoutTransform).(ScaleTransform.ScaleY)" To="1" DecelerationRatio="1" Duration="0:0:0.3" BeginTime="0:0:0.3" />
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(Control.LayoutTransform).(ScaleTransform.ScaleY)" To="0" AccelerationRatio="1" Duration="0:0:0.3"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.ExitActions>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+</ResourceDictionary>

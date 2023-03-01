@@ -12,7 +12,7 @@ namespace GhostInTheShell.Servers.Shell.Services
         readonly ILogger _logger;
         readonly ICharacterLocalService _charLocalSvc;
        
-        public CharacterServerService(ILogger<CharacterServerService> logger, ICharacterLocalService charLocalSvc, IShellModelFactory modelFac)
+        public CharacterServerService(ILogger<CharacterServerService> logger, ICharacterLocalService charLocalSvc)
         {
             _logger = logger;
             _charLocalSvc = charLocalSvc;

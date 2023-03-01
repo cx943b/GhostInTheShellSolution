@@ -6,14 +6,17 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-
+using GhostInTheShell.Modules.Balloon;
+using GhostInTheShell.Modules.Balloon.Controls;
+using GhostInTheShell.Modules.Balloon.Views;
 using GhostInTheShell.Modules.InfraStructure;
 using GhostInTheShell.Modules.Script;
 using GhostInTheShell.Modules.Shell;
 using GhostInTheShell.Modules.ShellInfra;
+using GhostInTheShell.Views;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-
+using Microsoft.VisualBasic;
 using Prism;
 using Prism.Events;
 using Prism.Ioc;
@@ -32,56 +35,63 @@ namespace GhostInTheShell
         protected override void InitializeShell(Window shell)
         {
             base.InitializeShell(shell);
+            shell.Width = 500;
+            shell.Height = 400;
 
             shell.Show();
+
+            var regionMgr = Container.Resolve<IRegionManager>();
+            regionMgr.RegisterViewWithRegion(WellknownRegionNames.MainViewRegion, typeof(MainView));
+            regionMgr.RegisterViewWithRegion(WellknownRegionNames.BalloonViewRegion, typeof(BalloonView));
+
         }
 
         protected override async void InitializeModules()
         {
             base.InitializeModules();
 
-            var regionMgr = Container.Resolve<RegionManager>();
-            regionMgr.RegisterViewWithRegion<Views.MainView>(WellknownRegionNames.MainViewRegion);
+            //var regionMgr = Container.Resolve<IRegionManager>();
+            //regionMgr.RegisterViewWithRegion(WellknownRegionNames.MainViewRegion, typeof(BalloonView));
 
-            var shellWindow = Container.Resolve<ShellWindow>();
-            shellWindow.Show();
-
-
-            // Error
-            //var mainWindow = Container.Resolve<MainWindow>();
-            //shellWindow.Owner = mainWindow;
+            //var shellWindow = Container.Resolve<ShellWindow>();
+            //shellWindow.Show();
 
 
-            var charClientSvc = Container.Resolve<ICharacterClientService>();
+            //// Error
+            ////var mainWindow = Container.Resolve<MainWindow>();
+            ////shellWindow.Owner = mainWindow;
 
 
-            // InitSize
-            var shellSize = await charClientSvc.RequestCharacterSize();
-
-            if (shellSize == System.Drawing.Size.Empty)
-                throw new InvalidOperationException("InvalidRes: ShellSize");
-
-            shellWindow.Width = shellSize.Width;
-            shellWindow.Height = shellSize.Height;
-            shellWindow.Left = SystemParameters.WorkArea.Width - shellSize.Width;
-            shellWindow.Top = SystemParameters.WorkArea.Height - shellSize.Height;
-            // InitSize
-
-            // InitImage
-            var eventAggr = Container.Resolve<IEventAggregator>();
-            eventAggr.GetEvent<ShellSizeChangedEvent>().Publish(shellSize);
-
-            var imgBytes = await charClientSvc.RequestCharacterImage("부끄럼0", "중간-무광", "미소");
-            
-            if(imgBytes is null)
-                throw new NullReferenceException(nameof(imgBytes));
-
-            eventAggr.GetEvent<MaterialCollectionChangedEvent>().Publish(new System.IO.MemoryStream(imgBytes));
-            // InitImage
+            //var charClientSvc = Container.Resolve<ICharacterClientService>();
 
 
+            //// InitSize
+            //var shellSize = await charClientSvc.RequestCharacterSize();
 
-            eventAggr.GetEvent<ShellChangeScriptCommandEvent>().Subscribe(onShellChangeExecute, ThreadOption.UIThread);
+            //if (shellSize == System.Drawing.Size.Empty)
+            //    throw new InvalidOperationException("InvalidRes: ShellSize");
+
+            //shellWindow.Width = shellSize.Width;
+            //shellWindow.Height = shellSize.Height;
+            //shellWindow.Left = SystemParameters.WorkArea.Width - shellSize.Width;
+            //shellWindow.Top = SystemParameters.WorkArea.Height - shellSize.Height;
+            //// InitSize
+
+            //// InitImage
+            //var eventAggr = Container.Resolve<IEventAggregator>();
+            //eventAggr.GetEvent<ShellSizeChangedEvent>().Publish(shellSize);
+
+            //var imgBytes = await charClientSvc.RequestCharacterImage("부끄럼0", "중간-무광", "미소");
+
+            //if(imgBytes is null)
+            //    throw new NullReferenceException(nameof(imgBytes));
+
+            //eventAggr.GetEvent<MaterialCollectionChangedEvent>().Publish(new System.IO.MemoryStream(imgBytes));
+            //// InitImage
+
+
+
+            //eventAggr.GetEvent<ShellChangeScriptCommandEvent>().Subscribe(onShellChangeExecute, ThreadOption.UIThread);
         }
 
         private async void onShellChangeExecute(ShellChangeScriptCommandEventArgs e)
@@ -101,8 +111,9 @@ namespace GhostInTheShell
         {
             base.ConfigureModuleCatalog(moduleCatalog);
 
-            moduleCatalog.AddModule<ScriptModule>();
-            moduleCatalog.AddModule<ShellModule>();
+            //moduleCatalog.AddModule<ScriptModule>();
+            //moduleCatalog.AddModule<ShellModule>();
+            moduleCatalog.AddModule<BalloonModule>();
         }
 
         
@@ -132,8 +143,16 @@ namespace GhostInTheShell
                         .AddDebug();
                 });
             });
-
             containerRegistry.Register(typeof(ILogger<>), typeof(Logger<>));
+            containerRegistry.RegisterSingleton<IBalloonService, BalloonService>();
+        }
+
+        protected override void ConfigureRegionAdapterMappings(RegionAdapterMappings regionAdapterMappings)
+        {
+            base.ConfigureRegionAdapterMappings(regionAdapterMappings);
+
+            var adapter = Container.Resolve<BalloonItemsControlAdapter>();
+            regionAdapterMappings.RegisterMapping<BalloonItemsControl>(adapter);
         }
     }
 }

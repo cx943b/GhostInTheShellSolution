@@ -22,9 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GhostInTheShell.Modules.InfraStructure\GhostInTheShell.Modules.InfraStructure.csproj" />
-    <ProjectReference Include="..\GhostInTheShell.Modules.Script\GhostInTheShell.Modules.Script.csproj" />
-    <ProjectReference Include="..\GhostInTheShell.Modules.ShellInfra\GhostInTheShell.Modules.ShellInfra.csproj" />
+    <ProjectReference Include="..\Modules\GhostInTheShell.Modules.BalloonInfra\GhostInTheShell.Modules.BalloonInfra.csproj" />
+    <ProjectReference Include="..\Modules\GhostInTheShell.Modules.Balloon\GhostInTheShell.Modules.Balloon.csproj" />
     <ProjectReference Include="..\Modules\GhostInTheShell.Modules.InfraStructure\GhostInTheShell.Modules.InfraStructure.csproj" />
     <ProjectReference Include="..\Modules\GhostInTheShell.Modules.Script\GhostInTheShell.Modules.Script.csproj" />
     <ProjectReference Include="..\Modules\GhostInTheShell.Modules.ShellInfra\GhostInTheShell.Modules.ShellInfra.csproj" />

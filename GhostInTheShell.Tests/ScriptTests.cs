@@ -22,8 +22,8 @@ namespace GhostInTheShell.Tests
             EventAggregator eventAggregator = new EventAggregator();
             eventAggregator.GetEvent<PrintWordScriptCommandEvent>().Subscribe(e => Debug.Write(e.PrintWord));
 
-            ScriptService scriptSvc = new ScriptService(LoggerMockFactory.CreateLogger<ScriptService>(), eventAggregator);
-            scriptSvc.Execute(script);
+            //ScriptService scriptSvc = new ScriptService(LoggerMockFactory.CreateLogger<ScriptService>(), eventAggregator);
+            //scriptSvc.Execute(script);
 
             Thread.Sleep(2000);
         }

@@ -22,7 +22,7 @@ namespace GhostInTheShell.Servers.Shell.Services
 
         //readonly IDictionary<string, IList<string>> _dicSavedFileNames = new Dictionary<string, IList<string>>();
 
-        public CharacterLocalService(ILogger<CharacterLocalService> logger, IEventAggregator eventAggregator, IConfiguration config, IShellModelFactory modelFac, IShellMaterialFactory matFac, HttpClient client)
+        public CharacterLocalService(ILogger<CharacterLocalService> logger, IEventAggregator eventAggregator, IConfiguration config, IShellModelFactory modelFac, IShellMaterialFactory matFac)
             : base(logger, eventAggregator, config, modelFac, matFac)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

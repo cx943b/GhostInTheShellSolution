@@ -9,6 +9,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddSingleton<IEventAggregator, EventAggregator>();
 builder.Services.AddSingleton<IShellModelFactory, ShellModelRemoteFactory>();
+//builder.Services.AddSingleton<IShellModelFactory>(prov =>
+//{
+//    ILogger<ShellModelRemoteFactory> logger = prov.GetRequiredService<ILogger<ShellModelRemoteFactory>>();
+//    IConfiguration config = prov.GetRequiredService<IConfiguration>();
+//    HttpClient client = prov.GetRequiredService<HttpClient>();
+
+//    return new ShellModelRemoteFactory(logger, config, client);
+//});
+builder.Services.AddSingleton<IShellModelFactory>();
+
 builder.Services.AddSingleton<IShellMaterialFactory, ShellMaterialRemoteFactory>();
 builder.Services.AddSingleton<ICharacterLocalService, CharacterLocalService>();
 
@@ -51,7 +61,10 @@ if(!builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
-bool isModelFactoryReady = await app.Services.GetService<IShellModelFactory>()!.InitializeAsync("Kaori");
+bool isModelFactoryReady = await app.Services
+    .GetRequiredService<IShellModelFactory>()
+    .InitializeAsync("Kaori");
+
 if (!isModelFactoryReady)
 {
     app.Logger.Log(LogLevel.Error, $"FailInitialize: {nameof(ShellModelLocalFactory)}, Enter to Exit.");
@@ -60,8 +73,8 @@ if (!isModelFactoryReady)
 
 Console.WriteLine("Initialized: ModelFactory.");
 
-var charLocalSvc = app.Services.GetService<ICharacterLocalService>();
-bool isCharSvcReady = await charLocalSvc!.InitializeAsync("Kaori");
+var charLocalSvc = app.Services.GetRequiredService<ICharacterLocalService>();
+bool isCharSvcReady = await charLocalSvc.InitializeAsync("Kaori");
 
 if (!isCharSvcReady)
 {
