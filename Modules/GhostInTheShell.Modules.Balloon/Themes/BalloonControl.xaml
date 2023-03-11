@@ -5,8 +5,6 @@
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="pack://application:,,,/GhostInTheShell.Modules.Balloon;Component/Themes/BalloonTail.xaml"/>
     </ResourceDictionary.MergedDictionaries>
-    
-    
 
     <Style TargetType="{x:Type localCtrl:BalloonControl}">
         <Setter Property="Template">

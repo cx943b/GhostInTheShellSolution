@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,5 +11,9 @@ namespace GhostInTheShell.Modules.Balloon.Controls
 {
     public class BalloonItemsControl : ItemsControl
     {
+        protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
+        {
+            base.OnItemsChanged(e);
+        }
     }
 }

@@ -15,20 +15,28 @@ namespace GhostInTheShell.ViewModels
 {
     internal class MainViewModel : BindableBase
     {
-        DelegateCommand _AddTextCommand;
+        readonly DelegateCommand _AddTextCommand;
+        readonly DelegateCommand _AddImageCommand;
         private readonly IBalloonService _ballSvc;
 
         public ICommand AddTextCommand => _AddTextCommand;
+        public ICommand AddImageCommand => _AddImageCommand;
 
         public MainViewModel(IBalloonService ballSvc)
         {
             _AddTextCommand = new DelegateCommand(onAddTextExecute);
+            _AddImageCommand = new DelegateCommand(onAddImageExecute);
+
             _ballSvc = ballSvc;
         }
 
         private void onAddTextExecute()
         {
             _ballSvc.AddText("끄아앙!");
+        }
+        private void onAddImageExecute()
+        {
+            _ballSvc.AddImage(new Uri("https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Smiley.svg/1200px-Smiley.svg.png"));
         }
     }
 

@@ -1,0 +1,17 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:localCtrl="clr-namespace:GhostInTheShell.Modules.Balloon.Controls">
+
+    <Style TargetType="{x:Type localCtrl:BalloonTextContentControl}">
+        <Setter Property="Text" Value="{Binding Text}"/>
+        <Setter Property="Position" Value="{Binding Position,Mode=TwoWay}"/>
+    </Style>
+
+    <Style TargetType="{x:Type localCtrl:BalloonImageContentControl}">
+        <Setter Property="ImageSize" Value="{Binding ImageSize}"/>
+        <Setter Property="ImageHorizontalAlignment" Value="{Binding ImageHorizontalAlignment}"/>
+        <Setter Property="ImageUri" Value="{Binding ImageUri}"/>
+        <Setter Property="Position" Value="{Binding Position, Mode=TwoWay}"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    </Style>
+</ResourceDictionary>

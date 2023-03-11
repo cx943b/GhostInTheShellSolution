@@ -13,6 +13,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/GhostInTheShell.Modules.Balloon;Component/Themes/BalloonControl.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/GhostInTheShell.Modules.Balloon;Component/Themes/BalloonContentControl.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <ObjectDataProvider x:Key="tailDirections" ObjectType="{x:Type sys:Enum}" MethodName="GetValues">
@@ -50,9 +51,16 @@
             <localCtrl:BalloonItemsControl prism:RegionManager.RegionName="{x:Static infra:WellknownRegionNames.BalloonContentRegion}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <Canvas/>
+                        <localCtrl:BalloonContentPanel ClipToBounds="True" VerticalAlignment="Top" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
+                <ItemsControl.Template>
+                    <ControlTemplate TargetType="localCtrl:BalloonItemsControl">
+                        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" VerticalContentAlignment="Top">
+                            <ItemsPresenter/>
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ItemsControl.Template>
             </localCtrl:BalloonItemsControl>
         </localCtrl:BalloonControl>
     </Grid>

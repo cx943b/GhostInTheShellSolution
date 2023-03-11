@@ -14,6 +14,12 @@ using Prism.Regions;
 
 namespace GhostInTheShell.Modules.Balloon
 {
+    public class BalloonItemsControlRegion : AllActiveRegion
+    {
+        public Size Size { get; set; } = new Size(Double.NaN, Double.NaN);
+    }
+
+
     public class BalloonItemsControlAdapter : RegionAdapterBase<BalloonItemsControl>
     {
         BalloonItemsControl? _regionTarget;
@@ -25,55 +31,60 @@ namespace GhostInTheShell.Modules.Balloon
         protected override void Adapt(IRegion region, BalloonItemsControl regionTarget)
         {
             _regionTarget = regionTarget;
-            region.ActiveViews.CollectionChanged += onRegionCollectionChanged;
+            _regionTarget.SizeChanged += (s, e) => ((BalloonItemsControlRegion)region).Size = e.NewSize;
+            region.Views.CollectionChanged += onRegionCollectionChanged;
         }
 
 
-        protected override IRegion CreateRegion() => new AllActiveRegion();
+        protected override IRegion CreateRegion() => new BalloonItemsControlRegion();
 
         private void onRegionCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            if(e.Action== NotifyCollectionChangedAction.Add)
+            Size regionTargetSize = _regionTarget!.DesiredSize;
+            var viewColl = (ViewsCollection)sender!;
+
+            int contentCount = viewColl.Count();
+            //var befLastContent = viewColl.ElementAt(contentCount - 2);
+
+
+            if (e.Action== NotifyCollectionChangedAction.Add)
             {
+                BalloonContentControlBase? contentCtrl = null;
                 foreach(var newItem in e.NewItems)
                 {
-                    switch(newItem)
+                    contentCtrl = null;
+
+                    switch (newItem)
                     {
                         case BalloonTextConetntModel txtContent:
                             {
-                                TextBlock txt = new TextBlock();
-                                txt.DataContext = txtContent;
-                                txt.SizeChanged += onSizeChanged;
-
-                                Binding bindText = new Binding();
-                                bindText.Source = txtContent;
-                                bindText.Path = new PropertyPath(nameof(BalloonTextConetntModel.Text));
+                                contentCtrl = new BalloonTextContentControl();
                                 
-                                txt.SetBinding(TextBlock.TextProperty, bindText);
+                                break;
+                            }
+                        case BalloonImageContentModel imgContent:
+                            {
+                                contentCtrl = new BalloonImageContentControl();
+                                contentCtrl.DataContext = imgContent;
 
-                                Canvas.SetLeft(txt, txtContent.Position.X);
-                                Canvas.SetTop(txt, txtContent.Position.Y);
-
-                                txt.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-                                txtContent.Size = txt.DesiredSize;
-
-                                _regionTarget!.Items.Add(txt);
                                 break;
                             }
                     }
+
+                    if(contentCtrl is null)
+                    {
+                        throw new InvalidCastException("NotBalloonContentDataContext");
+                    }
+
+                    contentCtrl.DataContext = newItem;
+
+                    _regionTarget!.Items.Add(contentCtrl);
                 }
             }
             else if(e.Action == NotifyCollectionChangedAction.Remove)
             {
 
             }
-        }
-
-        private static void onSizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            var contentModel = ((FrameworkElement)sender).DataContext as BalloonContentModelBase;
-            if (contentModel != null)
-                contentModel.Size = e.NewSize;
         }
     }
 }
