@@ -18,6 +18,6 @@
 
         <Button Content="AddText" DockPanel.Dock="Top" Command="{Binding AddTextCommand}"/>
         <Button Content="AddImage" DockPanel.Dock="Top" Command="{Binding AddImageCommand}"/>
-        <ContentControl prism:RegionManager.RegionName="{x:Static infra:WellknownRegionNames.BalloonViewRegion}"/>
+        <Button Content="Clear" DockPanel.Dock="Top" Command="{Binding ClearCommand}"/>
     </DockPanel>
 </UserControl>

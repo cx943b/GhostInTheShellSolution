@@ -59,14 +59,11 @@ namespace GhostInTheShell.Modules.Balloon
                         case BalloonTextConetntModel txtContent:
                             {
                                 contentCtrl = new BalloonTextContentControl();
-                                
                                 break;
                             }
                         case BalloonImageContentModel imgContent:
                             {
                                 contentCtrl = new BalloonImageContentControl();
-                                contentCtrl.DataContext = imgContent;
-
                                 break;
                             }
                     }
@@ -78,13 +75,32 @@ namespace GhostInTheShell.Modules.Balloon
 
                     contentCtrl.DataContext = newItem;
 
+                    Console.WriteLine($"BefAddHeight: {_regionTarget.ActualHeight}");
+
                     _regionTarget!.Items.Add(contentCtrl);
+
+                    Console.WriteLine($"BefAddHeight: {_regionTarget.ActualHeight}");
+
                 }
             }
             else if(e.Action == NotifyCollectionChangedAction.Remove)
             {
-
+                foreach (var oldItem in e.OldItems)
+                {
+                    foreach(FrameworkElement child in _regionTarget.Items)
+                    {
+                        if(child.DataContext == oldItem)
+                        {
+                            _regionTarget.Items.Remove(child);
+                            break;
+                        }
+                    }
+                }
             }
+            //else if (e.Action == NotifyCollectionChangedAction.Reset)
+            //{
+            //    _regionTarget.Items.Clear();
+            //}
         }
     }
 }

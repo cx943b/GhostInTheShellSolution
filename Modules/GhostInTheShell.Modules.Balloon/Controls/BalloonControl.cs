@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Animation;
 
 namespace GhostInTheShell.Modules.Balloon.Controls
 {
@@ -13,28 +14,37 @@ namespace GhostInTheShell.Modules.Balloon.Controls
     {
         const string TailBaseName = "PART_Tail";
 
-        public BalloonTailDirection TailDirection
-        {
-            get { return (BalloonTailDirection)GetValue(TailDirectionProperty); }
-            set { SetValue(TailDirectionProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for TailDirection.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty TailDirectionProperty =
-            DependencyProperty.Register("TailDirection", typeof(BalloonTailDirection), typeof(BalloonControl), new UIPropertyMetadata(BalloonTailDirection.Right, onBalloonTailDirectionPropertyChanged));
-
-
+        public static readonly DependencyProperty TailDirectionProperty = DependencyProperty.Register(
+            "TailDirection", typeof(BalloonTailDirection), typeof(BalloonControl), new UIPropertyMetadata(BalloonTailDirection.Right, onBalloonTailDirectionPropertyChanged));
+        public static readonly DependencyProperty TailPositionProperty = DependencyProperty.Register(
+            "TailPosition", typeof(double), typeof(BalloonControl), new UIPropertyMetadata(50d));
 
         public double TailPosition
         {
             get { return (double)GetValue(TailPositionProperty); }
             set { SetValue(TailPositionProperty, value); }
         }
+        public BalloonTailDirection TailDirection
+        {
+            get { return (BalloonTailDirection)GetValue(TailDirectionProperty); }
+            set { SetValue(TailDirectionProperty, value); }
+        }
 
-        // Using a DependencyProperty as the backing store for TailPosition.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty TailPositionProperty =
-            DependencyProperty.Register("TailPosition", typeof(double), typeof(BalloonControl), new UIPropertyMetadata(50d));
+        
 
+        protected override void OnChildDesiredSizeChanged(UIElement child)
+        {
+            base.OnChildDesiredSizeChanged(child);
+
+            double targetHeight = child.DesiredSize.Height + 48;
+
+            DoubleAnimation daHeight = new DoubleAnimation();
+            daHeight.DecelerationRatio = 1;
+            daHeight.Duration = TimeSpan.FromMilliseconds(200);
+            daHeight.To = targetHeight > MinHeight ? targetHeight : MinHeight;
+
+            this.BeginAnimation(HeightProperty, daHeight);
+        }
 
         private static void onBalloonTailDirectionPropertyChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
         {
@@ -52,5 +62,6 @@ namespace GhostInTheShell.Modules.Balloon.Controls
             if (newTail != null)
                 newTail.IsDirecting = true;
         }
+
     }
 }

@@ -11,6 +11,8 @@ namespace GhostInTheShell.Modules.Balloon.Controls
 {
     internal class BalloonContentPanel : Panel
     {
+        
+
         const int ImageContentVerticalMargin = 6;
 
         protected override Size ArrangeOverride(Size finalSize)

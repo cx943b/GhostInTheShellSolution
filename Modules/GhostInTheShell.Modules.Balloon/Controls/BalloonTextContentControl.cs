@@ -8,7 +8,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace GhostInTheShell.Modules.Balloon.Controls
 {
@@ -16,117 +15,6 @@ namespace GhostInTheShell.Modules.Balloon.Controls
     {
         public Point Position { get; set; }
         public Size Size { get; set; }
-    }
-
-    internal abstract class BalloonContentControlBase : FrameworkElement, IBalloonContent
-    {
-        public Point Position
-        {
-            get { return (Point)GetValue(PositionProperty); }
-            set { SetValue(PositionProperty, value); }
-        }
-        public Size Size
-        {
-            get { return (Size)GetValue(SizeProperty); }
-            set { SetValue(SizeProperty, value); }
-        }
-
-        public static readonly DependencyProperty PositionProperty =
-            DependencyProperty.Register("Position", typeof(Point), typeof(BalloonContentControlBase), new UIPropertyMetadata(new Point(), onPositionPropertyChanged));
-        public static readonly DependencyProperty SizeProperty =
-            DependencyProperty.Register("Size", typeof(Size), typeof(BalloonContentControlBase), new UIPropertyMetadata(new Size(), onSizePropertyChanged));
-
-        protected virtual void onPositionChanged(Point oldPos, Point newPos)
-        {
-            //Canvas.SetLeft(this, newPos.X);
-            //Canvas.SetTop(this, newPos.Y);
-        }
-        protected virtual void onSizeChanged(Size oldSize, Size newSize)
-        {
-            //Width = newSize.Width;
-            //Height = newSize.Height;
-        }
-
-        private static void onPositionPropertyChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
-        {
-            BalloonTextContentControl? txtContent = depObj as BalloonTextContentControl;
-            if (txtContent != null)
-                txtContent.onPositionChanged((Point)e.OldValue, (Point)e.NewValue);
-        }
-        private static void onSizePropertyChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
-        {
-            BalloonTextContentControl? txtContent = depObj as BalloonTextContentControl;
-            if (txtContent != null)
-                txtContent.onSizeChanged((Size)e.OldValue, (Size)e.NewValue);
-        }
-    }
-
-    internal class BalloonImageContentControl : BalloonContentControlBase
-    {
-        public static readonly DependencyProperty ImageHorizontalAlignmentProperty =
-            DependencyProperty.Register("ImageHorizontalAlignment", typeof(HorizontalAlignment), typeof(BalloonImageContentControl), new FrameworkPropertyMetadata(HorizontalAlignment.Center, FrameworkPropertyMetadataOptions.AffectsRender));
-        public static readonly DependencyProperty ImageSizeProperty =
-            DependencyProperty.Register("ImageSize", typeof(Size), typeof(BalloonImageContentControl), new FrameworkPropertyMetadata(new Size(), FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
-        public static readonly DependencyProperty ImageUriProperty =
-            DependencyProperty.Register("ImageUri", typeof(Uri), typeof(BalloonImageContentControl), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
-
-        public HorizontalAlignment ImageHorizontalAlignment
-        {
-            get { return (HorizontalAlignment)GetValue(ImageHorizontalAlignmentProperty); }
-            set { SetValue(ImageHorizontalAlignmentProperty, value); }
-        }
-        public Size ImageSize
-        {
-            get { return (Size)GetValue(ImageSizeProperty); }
-            set { SetValue(ImageSizeProperty, value); }
-        }
-        public Uri ImageUri
-        {
-            get { return (Uri)GetValue(ImageUriProperty); }
-            set { SetValue(ImageUriProperty, value); }
-        }
-
-        protected override void OnRender(DrawingContext dc)
-        {
-            if (ImageUri is null)
-                return;
-
-            BitmapImage bi = new BitmapImage();
-            bi.BeginInit();
-            bi.UriSource = ImageUri;
-            bi.DecodePixelHeight = (int)ImageSize.Height;
-            bi.EndInit();
-
-            
-
-            if (bi.CanFreeze)
-                bi.Freeze();
-
-            Point pos = new Point(20,0);
-            Size imgSize = ImageSize;
-
-            HorizontalAlignment hAlignment = ImageHorizontalAlignment;
-
-            if (RenderSize.Width > imgSize.Width)
-            {
-                if (hAlignment == HorizontalAlignment.Right)
-                {
-                    pos.X = RenderSize.Width - imgSize.Width;
-                }
-                else if (hAlignment == HorizontalAlignment.Center)
-                {
-                    pos.X = (RenderSize.Width - imgSize.Width) / 2;
-                }
-            }
-            
-            dc.DrawImage(bi, new Rect(pos, imgSize));
-        }
-
-        protected override Size ArrangeOverride(Size finalSize)
-        {
-            return finalSize;
-        }
-        protected override Size MeasureOverride(Size availableSize) => ImageSize;
     }
 
     

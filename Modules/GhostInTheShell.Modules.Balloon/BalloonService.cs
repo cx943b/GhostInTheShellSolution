@@ -41,7 +41,7 @@ namespace GhostInTheShell.Modules.Balloon
         public void AddText(string text)
         {
             if (_balloonContentsRegion is null)
-                _balloonContentsRegion = (BalloonItemsControlRegion)_regionMgr.Regions[WellknownRegionNames.BalloonContentRegion];
+                _balloonContentsRegion = (BalloonItemsControlRegion)_regionMgr.Regions[WellknownRegionNames.BalloonContentControlRegion];
 
             if (string.IsNullOrEmpty(text))
             {
@@ -55,23 +55,29 @@ namespace GhostInTheShell.Modules.Balloon
             _balloonContentsRegion.Add(textContent);
             _lstContent.Add(textContent);
         }
-        public void AddImage(Uri imageUri)
+        public void AddImage(Uri imgUri, Size imgSize)
         {
             if (_balloonContentsRegion is null)
-                _balloonContentsRegion = (BalloonItemsControlRegion)_regionMgr.Regions[WellknownRegionNames.BalloonContentRegion];
+                _balloonContentsRegion = (BalloonItemsControlRegion)_regionMgr.Regions[WellknownRegionNames.BalloonContentControlRegion];
 
-            if(imageUri is null)
+            if(imgUri is null)
             {
-                _logger.Log(LogLevel.Warning, $"NullOrEmpty: {nameof(imageUri)}");
+                _logger.Log(LogLevel.Warning, $"NullOrEmpty: {nameof(imgUri)}");
                 return;
             }
 
             BalloonImageContentModel imgContent = new BalloonImageContentModel();
-            imgContent.ImageUri = imageUri;
-            imgContent.ImageSize = new Size(40, 40);
+            imgContent.ImageUri = imgUri;
+            imgContent.ImageSize = imgSize;
 
             _balloonContentsRegion.Add(imgContent);
             _lstContent.Add(imgContent);
+        }
+
+        public void Clear()
+        {
+            _balloonContentsRegion.RemoveAll();
+            _lstContent.Clear();
         }
     }
 }

@@ -156,36 +156,47 @@ namespace GhostInTheShell.Modules.Balloon.Controls
             ballTail.CaptureMouse();
 
             ballTail._isManualPositioning = true;
+
+            e.Handled = true;
         }
         private static void onMouseLeftButtonUp(object sender, MouseEventArgs e)
         {
             BalloonTail ballTail = (BalloonTail)sender;
-            ballTail.ReleaseMouseCapture();
 
-            BalloonTailDirection tailDirection = ballTail.TailDirection;
-            double oldPosition = 0d, newPosition = 0d;
-
-            if (tailDirection == BalloonTailDirection.Left || tailDirection == BalloonTailDirection.Right)
+            if(ballTail.IsMouseCaptured)
             {
-                double moveLength = ballTail._tailPanel.ActualHeight - ballTail._tailPath.Height;
-                oldPosition = ballTail._dragStartPathPos.Y * 100 / moveLength;
+                ballTail.ReleaseMouseCapture();
 
-                double tailTop = Canvas.GetTop(ballTail._tailPath);
-                newPosition = tailTop * 100 / moveLength;
+                BalloonTailDirection tailDirection = ballTail.TailDirection;
+                double oldPosition = 0d, newPosition = 0d;
+
+                if (tailDirection == BalloonTailDirection.Left || tailDirection == BalloonTailDirection.Right)
+                {
+                    double moveLength = ballTail._tailPanel.ActualHeight - ballTail._tailPath.Height;
+                    oldPosition = ballTail._dragStartPathPos.Y * 100 / moveLength;
+
+                    double tailTop = Canvas.GetTop(ballTail._tailPath);
+                    newPosition = tailTop * 100 / moveLength;
+                }
+                else
+                {
+                    double moveLength = ballTail._tailPanel.Width - ballTail._tailPath.Width;
+                    oldPosition = ballTail._dragStartPathPos.X * 100 / moveLength;
+
+                    double tailLeft = Canvas.GetLeft(ballTail._tailPath);
+                    newPosition = tailLeft * 100 / moveLength;
+                }
+
+                //Console.WriteLine($"TailPos(%): {newPosition}");
+                ballTail.OnTailPositionChanged(oldPosition, newPosition);
+
+                ballTail._isManualPositioning = false;
+
+                e.Handled = true;
             }
-            else
-            {
-                double moveLength = ballTail._tailPanel.Width - ballTail._tailPath.Width;
-                oldPosition = ballTail._dragStartPathPos.X * 100 / moveLength;
+            
 
-                double tailLeft = Canvas.GetLeft(ballTail._tailPath);
-                newPosition = tailLeft * 100 / moveLength;
-            }
-
-            //Console.WriteLine($"TailPos(%): {newPosition}");
-            ballTail.OnTailPositionChanged(oldPosition, newPosition);
-
-            ballTail._isManualPositioning = false;
+            
         }
         private static void onMouseMove(object sender, MouseEventArgs e)
         {
@@ -224,6 +235,8 @@ namespace GhostInTheShell.Modules.Balloon.Controls
 
                     Canvas.SetLeft(ballTail._tailPath, newLeft);
                 }
+
+                e.Handled = true;
             }
         }
 

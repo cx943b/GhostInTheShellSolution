@@ -22,6 +22,7 @@ using Prism.Events;
 using Prism.Ioc;
 using Prism.Modularity;
 using Prism.Regions;
+using Prism.Services.Dialogs;
 using Prism.Unity;
 
 using Serilog;
@@ -41,9 +42,7 @@ namespace GhostInTheShell
             shell.Show();
 
             var regionMgr = Container.Resolve<IRegionManager>();
-            regionMgr.RegisterViewWithRegion(WellknownRegionNames.MainViewRegion, typeof(MainView));
-            regionMgr.RegisterViewWithRegion(WellknownRegionNames.BalloonViewRegion, typeof(BalloonView));
-
+            regionMgr.RegisterViewWithRegion<MainView>(WellknownRegionNames.MainViewRegion);
         }
 
         protected override async void InitializeModules()
@@ -145,6 +144,7 @@ namespace GhostInTheShell
             });
             containerRegistry.Register(typeof(ILogger<>), typeof(Logger<>));
             containerRegistry.RegisterSingleton<IBalloonService, BalloonService>();
+            containerRegistry.RegisterSingleton<IDialogService, GhostDialogService>();
         }
 
         protected override void ConfigureRegionAdapterMappings(RegionAdapterMappings regionAdapterMappings)

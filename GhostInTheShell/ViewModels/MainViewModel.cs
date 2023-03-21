@@ -6,37 +6,71 @@ using Prism.Events;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace GhostInTheShell.ViewModels
 {
+    public class SosoRandomSeed
+    {
+        static Stopwatch _watch = new Stopwatch();
+
+        public static int GetSeed()
+        {
+            _watch.Restart();
+            Thread.Sleep(1);
+            _watch.Stop();
+
+            return (int)_watch.ElapsedTicks;
+        }
+    }
     internal class MainViewModel : BindableBase
     {
         readonly DelegateCommand _AddTextCommand;
         readonly DelegateCommand _AddImageCommand;
+        readonly DelegateCommand _ClearCommand;
+
         private readonly IBalloonService _ballSvc;
 
         public ICommand AddTextCommand => _AddTextCommand;
         public ICommand AddImageCommand => _AddImageCommand;
+        public ICommand ClearCommand => _ClearCommand;
 
         public MainViewModel(IBalloonService ballSvc)
         {
             _AddTextCommand = new DelegateCommand(onAddTextExecute);
             _AddImageCommand = new DelegateCommand(onAddImageExecute);
+            _ClearCommand = new DelegateCommand(onClearCommand);
 
             _ballSvc = ballSvc;
         }
 
         private void onAddTextExecute()
         {
-            _ballSvc.AddText("끄아앙!");
+            char korStart = '가';
+            int catchSeed = SosoRandomSeed.GetSeed();
+            int catchCount = (new Random(catchSeed)).Next(10, 20);
+
+            string korStr = Enumerable.Range(0, catchCount).Aggregate(new StringBuilder(), (sb, n) =>
+            {
+                sb.Append(Char.ConvertFromUtf32((int)korStart + n));
+                return sb;
+            }).ToString();
+
+            _ballSvc.AddText(korStr);
         }
         private void onAddImageExecute()
         {
-            _ballSvc.AddImage(new Uri("https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Smiley.svg/1200px-Smiley.svg.png"));
+            _ballSvc.AddImage(new Uri("https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Smiley.svg/1200px-Smiley.svg.png"), new System.Windows.Size(400, 400));
+        }
+        private void onClearCommand()
+        {
+            _ballSvc.Clear();
         }
     }
 

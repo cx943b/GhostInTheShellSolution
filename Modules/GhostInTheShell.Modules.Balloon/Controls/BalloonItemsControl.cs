@@ -9,11 +9,25 @@ using System.Windows.Controls;
 
 namespace GhostInTheShell.Modules.Balloon.Controls
 {
+
+    public class BalloonContentPresenter : ContentPresenter
+    {
+        protected override Size MeasureOverride(Size constraint)
+        {
+            if (Content is null)
+                return new Size();
+
+            return base.MeasureOverride(new Size(constraint.Width, Double.PositiveInfinity));
+        }
+    }
     public class BalloonItemsControl : ItemsControl
     {
-        protected override void OnItemsChanged(NotifyCollectionChangedEventArgs e)
+        protected override Size MeasureOverride(Size constraint)
         {
-            base.OnItemsChanged(e);
+            if (Items.Count == 0)
+                return new Size();
+
+            return base.MeasureOverride(new Size(constraint.Width, Double.PositiveInfinity));
         }
     }
 }

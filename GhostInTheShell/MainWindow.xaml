@@ -9,8 +9,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
 
-    <DockPanel>
+    <Grid>
         <ContentControl prism:RegionManager.RegionName="{x:Static infra:WellknownRegionNames.MainViewRegion}"/>
-    </DockPanel>
+    </Grid>
     
 </Window>

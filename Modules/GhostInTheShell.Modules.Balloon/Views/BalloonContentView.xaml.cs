@@ -1,6 +1,4 @@
-﻿using GhostInTheShell.Modules.Balloon.ViewModels;
-using Prism.Regions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,12 +16,11 @@ using System.Windows.Shapes;
 namespace GhostInTheShell.Modules.Balloon.Views
 {
     /// <summary>
-    /// BalloonView.xaml에 대한 상호 작용 논리
+    /// BalloonContentView.xaml에 대한 상호 작용 논리
     /// </summary>
-    public partial class BalloonView : UserControl
+    public partial class BalloonContentView : UserControl
     {
-
-        public BalloonView()
+        public BalloonContentView()
         {
             InitializeComponent();
         }

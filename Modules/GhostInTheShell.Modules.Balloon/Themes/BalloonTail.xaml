@@ -69,8 +69,6 @@
     <Style TargetType="{x:Type localCtrl:BalloonTail}">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="TailPosition" Value="50"/>
-        <Setter Property="Width" Value="20"/>
-        <Setter Property="Height" Value="20"/>
         
         <Style.Triggers>
             <Trigger Property="TailDirection" Value="Left">
@@ -93,6 +91,7 @@
     </Style>
 
     <Style x:Key="BalloonTailHorizontalStyleKey" TargetType="{x:Type localCtrl:BalloonTail}" BasedOn="{StaticResource {x:Type localCtrl:BalloonTail}}">
+        <Setter Property="Width" Value="20"/>
         <Setter Property="LayoutTransform">
             <Setter.Value>
                 <ScaleTransform ScaleX="0" />
@@ -119,6 +118,7 @@
         </Style.Triggers>
     </Style>
     <Style x:Key="BalloonTailVerticalStyleKey" TargetType="{x:Type localCtrl:BalloonTail}" BasedOn="{StaticResource {x:Type localCtrl:BalloonTail}}">
+        <Setter Property="Height" Value="20"/>
         <Setter Property="LayoutTransform">
             <Setter.Value>
                 <ScaleTransform ScaleY="0" />

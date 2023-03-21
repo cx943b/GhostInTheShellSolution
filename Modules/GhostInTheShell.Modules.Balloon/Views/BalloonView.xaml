@@ -2,66 +2,37 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:local="clr-namespace:GhostInTheShell.Modules.Balloon"
              xmlns:localCtrl="clr-namespace:GhostInTheShell.Modules.Balloon.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:prism="http://prismlibrary.com/"
              xmlns:infra="clr-namespace:GhostInTheShell.Modules.InfraStructure;assembly=GhostInTheShell.Modules.InfraStructure"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              prism:ViewModelLocator.AutoWireViewModel="True">
 
+    <prism:Dialog.WindowStyle>
+        <Style TargetType="{x:Type local:BalloonWindow}">
+            <Setter Property="AllowsTransparency" Value="True"/>
+            <Setter Property="Background" Value="{x:Null}"/>
+            <Setter Property="WindowStyle" Value="None"/>
+            <Setter Property="Width" Value="400"/>
+            <Setter Property="Height" Value="1300"/>
+        </Style>
+    </prism:Dialog.WindowStyle>
+    
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/GhostInTheShell.Modules.Balloon;Component/Themes/BalloonControl.xaml"/>
                 <ResourceDictionary Source="pack://application:,,,/GhostInTheShell.Modules.Balloon;Component/Themes/BalloonContentControl.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-
-            <ObjectDataProvider x:Key="tailDirections" ObjectType="{x:Type sys:Enum}" MethodName="GetValues">
-                <ObjectDataProvider.MethodParameters>
-                    <x:Type Type="{x:Type localCtrl:BalloonTailDirection}"/>
-                </ObjectDataProvider.MethodParameters>
-            </ObjectDataProvider>
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="auto"/>
-        </Grid.ColumnDefinitions>
-
-        <StackPanel>
-            <ListBox x:Name="lstTailDirection" ItemsSource="{Binding Source={StaticResource tailDirections}}">
-                <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel></StackPanel>
-                    </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-                <ListBox.ItemTemplate>
-                    <DataTemplate DataType="{x:Type localCtrl:BalloonTailDirection}">
-                        <TextBlock Text="{Binding}" Margin="6"/>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </StackPanel>
-
-
-        <localCtrl:BalloonControl Grid.Column="1" TailPosition="50" Margin="20" MinWidth="300" MinHeight="200" TailDirection="{Binding ElementName=lstTailDirection, Path=SelectedValue}">
-            <localCtrl:BalloonItemsControl prism:RegionManager.RegionName="{x:Static infra:WellknownRegionNames.BalloonContentRegion}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <localCtrl:BalloonContentPanel ClipToBounds="True" VerticalAlignment="Top" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.Template>
-                    <ControlTemplate TargetType="localCtrl:BalloonItemsControl">
-                        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" VerticalContentAlignment="Top">
-                            <ItemsPresenter/>
-                        </ScrollViewer>
-                    </ControlTemplate>
-                </ItemsControl.Template>
-            </localCtrl:BalloonItemsControl>
-        </localCtrl:BalloonControl>
-    </Grid>
+    <localCtrl:BalloonControl x:Name="ballCtrl" Margin="20" MinWidth="300" MinHeight="200" Height="200" VerticalAlignment="Top"
+                              TailPosition="{Binding TailPosition, Mode=TwoWay}"
+                              TailDirection="{Binding TailDirection}">
+        <ContentControl prism:RegionManager.RegionName="{x:Static infra:WellknownRegionNames.BalloonContentViewRegion}"/>
+    </localCtrl:BalloonControl>
 </UserControl>
