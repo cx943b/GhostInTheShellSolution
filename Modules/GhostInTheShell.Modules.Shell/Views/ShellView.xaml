@@ -6,9 +6,11 @@
              
              xmlns:local="clr-namespace:GhostInTheShell.Modules.Shell.Views"
              xmlns:prism="http://prismlibrary.com/"
-             prism:ViewModelLocator.AutoWireViewModel="True"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             Height="{Binding ImageSize.Height, FallbackValue=200}"
+             Width="{Binding ImageSize.Width, FallbackValue=200}">
 
+    
     <Image Source="{Binding ImageSource}"/>
 </UserControl>

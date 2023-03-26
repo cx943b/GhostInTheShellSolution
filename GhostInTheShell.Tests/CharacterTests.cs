@@ -100,8 +100,8 @@ namespace GhostInTheShell.Tests
         [TestMethod]
         public async Task CharacterClientTest()
         {
-            CharacterClientService clientSvc = new CharacterClientService(LoggerMockFactory.CreateLogger<CharacterClientService>());
-            byte[]? charBytes = await clientSvc.RequestCharacterImage("부끄럼0", "중간", "웃음");
+            ShellService clientSvc = new CharacterClientService(LoggerMockFactory.CreateLogger<ShellService>());
+            byte[]? charBytes = await clientSvc.RequestShellImageAsync("부끄럼0", "중간", "웃음");
 
             Assert.IsNotNull(charBytes);
 

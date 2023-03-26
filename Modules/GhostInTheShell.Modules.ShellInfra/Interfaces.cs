@@ -29,10 +29,10 @@ namespace GhostInTheShell.Modules.ShellInfra
     //    Task<XmlReader> RequestTableAsync(string shellName, string tableName);
     //}
 
-    public interface ICharacterClientService
+    public interface IShellService
     {
-        Task<byte[]?> RequestCharacterImage(string headLabel, string eyeLabel, string faceLabel);
-        Task<Size> RequestCharacterSize();
+        Task<byte[]?> RequestShellImageAsync(string headLabel, string eyeLabel, string faceLabel);
+        Task<Size> RequestShellSizeAsync();
     }
     public interface ICharacterService
     {

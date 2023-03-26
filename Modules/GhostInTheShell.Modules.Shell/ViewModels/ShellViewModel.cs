@@ -1,6 +1,7 @@
 ﻿using GhostInTheShell.Modules.ShellInfra;
 using Prism.Events;
 using Prism.Mvvm;
+using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +13,7 @@ using System.Windows.Media.Imaging;
 
 namespace GhostInTheShell.Modules.Shell.ViewModels
 {
-    internal sealed class ShellViewModel : BindableBase, IDisposable
+    internal class ShellViewModel : BindableBase, IDisposable, IDialogAware
     {
         readonly MaterialCollectionChangedEvent _matCollChangedEvent;
         readonly ShellSizeChangedEvent _sizeChangedEvent;
@@ -22,6 +23,10 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
 
         BitmapImage? _ImageSource;
         Size _ImageSize;
+        double _Left = 400, _Top;
+        double _Width, _Height;
+
+        public event Action<IDialogResult> RequestClose = null!;
 
         public BitmapImage? ImageSource
         {
@@ -34,6 +39,27 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
             set => SetProperty(ref _ImageSize, value);
         }
 
+        public double Left
+        {
+            get => _Left;
+            set => SetProperty(ref _Left, value);
+        }
+        public double Top
+        {
+            get => _Top;
+            set => SetProperty(ref _Top, value);
+        }
+        public double Width
+        {
+            get => _Width;
+            set => SetProperty(ref _Width, value);
+        }
+        public double Height
+        {
+            get => _Height;
+            set => SetProperty(ref _Height, value);
+        }
+        public string Title { get; set; } = "Shell";
 
         public ShellViewModel(IEventAggregator eventAggregator)
         {
@@ -50,9 +76,16 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
             _subSizeToken.Dispose();
         }
 
+        
+
         private void onShellSizeChanged(System.Drawing.Size shellSize)
         {
-            ImageSize = new Size(shellSize.Width, shellSize.Height);
+            Width = shellSize.Width;
+            Height = shellSize.Height;
+            Left = SystemParameters.WorkArea.Width - shellSize.Width;
+            Top = SystemParameters.WorkArea.Height - shellSize.Height;
+
+            ImageSize = new Size(_Width, _Height);
         }
 
         private void onMaterialCollectionChanged(MemoryStream imgStream)
@@ -75,6 +108,26 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
             else
             {
                 ImageSource = null;
+            }
+        }
+
+        public bool CanCloseDialog() => true;
+
+        public void OnDialogClosed()
+        {
+            
+            //throw new NotImplementedException();
+        }
+
+        public void OnDialogOpened(IDialogParameters parameters)
+        {
+            if (parameters.TryGetValue(nameof(ShellViewModel.ImageSize), out System.Drawing.Size imgSize))
+            {
+                onShellSizeChanged(imgSize);
+            }
+            else
+            {
+                throw new KeyNotFoundException(nameof(ShellViewModel));
             }
         }
     }

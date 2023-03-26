@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GhostInTheShell.Modules.InfraStructure\GhostInTheShell.Modules.InfraStructure.csproj" />
+    <ProjectReference Include="..\GhostInTheShell.Modules.MvvmInfra\GhostInTheShell.Modules.MvvmInfra.csproj" />
   </ItemGroup>
 
 </Project>

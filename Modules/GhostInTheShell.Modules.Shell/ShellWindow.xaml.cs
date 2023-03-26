@@ -1,6 +1,8 @@
-﻿using Prism.Services.Dialogs;
+﻿using GhostInTheShell.Modules.MvvmInfra.Controls;
+using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,16 +17,12 @@ using System.Windows.Shapes;
 
 namespace GhostInTheShell.Modules.Shell
 {
-    /// <summary>
-    /// ShellWindow.xaml에 대한 상호 작용 논리
-    /// </summary>
-    public partial class ShellWindow : Window, IDialogWindow
+    public partial class ShellWindow : GhostDialogWindow
     {
         public ShellWindow()
         {
             InitializeComponent();
+            MoveDirection = GhostDialogWindowMoveDirection.Horizontal;
         }
-
-        public IDialogResult Result { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }
 }

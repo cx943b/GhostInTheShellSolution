@@ -35,42 +35,32 @@ namespace GhostInTheShell.ViewModels
         readonly DelegateCommand _AddImageCommand;
         readonly DelegateCommand _ClearCommand;
 
-        private readonly IBalloonService _ballSvc;
+        readonly ICentralProcessingService _centralSvc;
 
         public ICommand AddTextCommand => _AddTextCommand;
         public ICommand AddImageCommand => _AddImageCommand;
         public ICommand ClearCommand => _ClearCommand;
 
-        public MainViewModel(IBalloonService ballSvc)
+        public MainViewModel(ICentralProcessingService centralSvc)
         {
             _AddTextCommand = new DelegateCommand(onAddTextExecute);
             _AddImageCommand = new DelegateCommand(onAddImageExecute);
             _ClearCommand = new DelegateCommand(onClearCommand);
 
-            _ballSvc = ballSvc;
+            _centralSvc = centralSvc;
         }
 
         private void onAddTextExecute()
         {
-            char korStart = '가';
-            int catchSeed = SosoRandomSeed.GetSeed();
-            int catchCount = (new Random(catchSeed)).Next(10, 20);
-
-            string korStr = Enumerable.Range(0, catchCount).Aggregate(new StringBuilder(), (sb, n) =>
-            {
-                sb.Append(Char.ConvertFromUtf32((int)korStart + n));
-                return sb;
-            }).ToString();
-
-            _ballSvc.AddText(korStr);
+            _centralSvc.ExecuteScript("\\s[부끄럼0,중간-무광,미소]안녕하세요?");
         }
         private void onAddImageExecute()
         {
-            _ballSvc.AddImage(new Uri("https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Smiley.svg/1200px-Smiley.svg.png"), new System.Windows.Size(400, 400));
+            //_ballSvc.AddImage(new Uri("https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Smiley.svg/1200px-Smiley.svg.png"), new System.Windows.Size(400, 400));
         }
         private void onClearCommand()
         {
-            _ballSvc.Clear();
+            _centralSvc.ExecuteScript("\\c");
         }
     }
 

@@ -26,7 +26,7 @@ namespace GhostInTheShell.Modules.Script
         const char ParamStringCloseChar = ']';
 
         readonly ILogger _logger;
-        readonly ICharacterClientService _charClientSvc;
+        readonly IShellService _charClientSvc;
 
         readonly ClearWordsScriptCommandEvent _clearWordsScriptCommandEvent;
         readonly PrintWordScriptCommandEvent _printWordScriptCommandEvent;
@@ -43,7 +43,7 @@ namespace GhostInTheShell.Modules.Script
         public bool IsRunning { get; private set; }
         public int ScriptCommandPumpInterval { get; private set; } = 30;
 
-        public ScriptService(ILogger<ScriptService> logger, IEventAggregator eventAggregator, ICharacterClientService charClientSvc)
+        public ScriptService(ILogger<ScriptService> logger, IEventAggregator eventAggregator, IShellService charClientSvc)
         {
             _logger = logger;
             _charClientSvc = charClientSvc ?? throw new NullReferenceException(nameof(charClientSvc));
@@ -181,7 +181,7 @@ namespace GhostInTheShell.Modules.Script
                                     string[] charParams = paramStr.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                                     if(charParams.Length == 3)
                                     {
-                                        byte[]? imgBytes = await _charClientSvc.RequestCharacterImage(charParams[0], charParams[1], charParams[2]);
+                                        byte[]? imgBytes = await _charClientSvc.RequestShellImageAsync(charParams[0], charParams[1], charParams[2]);
                                         if(imgBytes is null)
                                         {
                                             throw new ArgumentException($"ScriptError-InvalidResponses: {ScriptCommandChar.ChangeShell}");

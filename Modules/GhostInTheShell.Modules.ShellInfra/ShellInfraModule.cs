@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 
 namespace GhostInTheShell.Modules.ShellInfra
 {
+    // NotUse, Use gRPC
     public sealed class ShellInfraModule : IModule
     {
         const string FactoryTypeSection = "ShellData:FactoryType";

@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace GhostInTheShell.Modules.Balloon
+namespace GhostInTheShell.Modules.MvvmInfra
 {
     public class GhostDialogService : DialogService
     {
@@ -21,10 +21,11 @@ namespace GhostInTheShell.Modules.Balloon
 
         protected override void ConfigureDialogWindowContent(string dialogName, IDialogWindow window, IDialogParameters parameters)
         {
+            
             RegionManager.SetRegionManager((Window)window, _regionMgr);
-            //RegionManager.UpdateRegions();
-
             base.ConfigureDialogWindowContent(dialogName, window, parameters);
+
+            ((Window)window).Owner = Application.Current.MainWindow;
         }
     }
 }

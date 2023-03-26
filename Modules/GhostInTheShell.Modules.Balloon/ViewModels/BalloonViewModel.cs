@@ -20,9 +20,6 @@ namespace GhostInTheShell.Modules.Balloon.ViewModels
         double _Width = 400;
 
         readonly DelegateCommand<BalloonTailDirection?> _TailDirectionSelectedCommand;
-        readonly DelegateCommand<MouseButtonEventArgs> _MouseLeftButtonDownCommand;
-        readonly DelegateCommand<MouseButtonEventArgs> _MouseLeftButtonUpCommand;
-        readonly DelegateCommand<MouseEventArgs> _MouseMoveCommand;
 
         public event Action<IDialogResult> RequestClose;
 
@@ -43,9 +40,6 @@ namespace GhostInTheShell.Modules.Balloon.ViewModels
         }
 
         public ICommand TailDirectionSelectedCommand => _TailDirectionSelectedCommand;
-        public ICommand MouseLeftButtonDownCommand => _MouseLeftButtonDownCommand;
-        public ICommand MouseLeftButtonUpCommand => _MouseLeftButtonUpCommand;
-        public ICommand MouseMoveCommand => _MouseMoveCommand;
 
         public string Title => "BalloonDialog";
 
@@ -53,26 +47,7 @@ namespace GhostInTheShell.Modules.Balloon.ViewModels
         {
             _TailDirectionSelectedCommand = new DelegateCommand<BalloonTailDirection?>(onBalloonTailDirectionSelectedExecute);
 
-            _MouseLeftButtonDownCommand = new DelegateCommand<MouseButtonEventArgs>(onMouseLeftButtonDown);
-            _MouseLeftButtonUpCommand = new DelegateCommand<MouseButtonEventArgs>(onMouseLeftButtonUp);
-            _MouseMoveCommand = new DelegateCommand<MouseEventArgs>(onMouseMove);
         }
-
-        private void onMouseLeftButtonDown(MouseButtonEventArgs e)
-        {
-            Console.WriteLine(e);
-        }
-        private void onMouseLeftButtonUp(MouseButtonEventArgs e)
-        {
-
-        }
-        private void onMouseMove(MouseEventArgs e)
-        {
-
-        }
-
-
-
 
         private void onBalloonTailDirectionSelectedExecute(BalloonTailDirection? tailDirection)
         {

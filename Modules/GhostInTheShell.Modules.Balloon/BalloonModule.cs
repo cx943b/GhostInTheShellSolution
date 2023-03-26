@@ -1,6 +1,7 @@
 ﻿using GhostInTheShell.Modules.Balloon.ViewModels;
 using GhostInTheShell.Modules.Balloon.Views;
 using GhostInTheShell.Modules.InfraStructure;
+using Prism.Events;
 using Prism.Ioc;
 using Prism.Modularity;
 using Prism.Regions;
@@ -19,7 +20,7 @@ namespace GhostInTheShell.Modules.Balloon
         public void OnInitialized(IContainerProvider containerProvider)
         {
             IRegionManager regionMgr = containerProvider.Resolve<IRegionManager>();
-            var result = regionMgr.RegisterViewWithRegion<BalloonContentView>(WellknownRegionNames.BalloonContentViewRegion);
+            regionMgr.RegisterViewWithRegion<BalloonContentView>(WellknownRegionNames.BalloonContentViewRegion);
 
             var dialogSvc = containerProvider.Resolve<IDialogService>();
             dialogSvc.Show(nameof(BalloonView),null, null, nameof(BalloonWindow));
