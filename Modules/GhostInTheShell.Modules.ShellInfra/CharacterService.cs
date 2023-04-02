@@ -245,7 +245,7 @@ namespace GhostInTheShell.Modules.ShellInfra
 
                 _logger.Log(LogLevel.Information, "ModelFactory Ready");
                 var retParam = initializeCharacterParameters(xmlDoc.DocumentElement);
-
+                
                 ShellName = shellName;
                 return retParam;
             }

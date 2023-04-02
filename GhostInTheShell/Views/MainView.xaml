@@ -5,19 +5,25 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:GhostInTheShell.Views"
              xmlns:infra="clr-namespace:GhostInTheShell.Modules.InfraStructure;assembly=GhostInTheShell.Modules.InfraStructure"
+             xmlns:ball="clr-namespace:GhostInTheShell.Modules.Balloon;assembly=GhostInTheShell.Modules.Balloon"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:prism="http://prismlibrary.com/"
              prism:ViewModelLocator.AutoWireViewModel="True"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     
     <DockPanel LastChildFill="False">
-        <!--<Button DockPanel.Dock="Bottom" Content="ExecuteScript" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="6 12" Command="{Binding ExecuteCommand, Mode=OneTime}" />
-        <TextBox DockPanel.Dock="Bottom" Text="{Binding InputScript, UpdateSourceTrigger=PropertyChanged}" Margin="6 12"/>
-
-        <TextBlock DockPanel.Dock="Top" Margin="6" Text="{Binding Text}"/>-->
-
         <Button Content="AddText" DockPanel.Dock="Top" Command="{Binding AddTextCommand}"/>
         <Button Content="AddImage" DockPanel.Dock="Top" Command="{Binding AddImageCommand}"/>
         <Button Content="Clear" DockPanel.Dock="Top" Command="{Binding ClearCommand}"/>
+
+        <GroupBox Header="BalloonTailDirections">
+            <StackPanel>
+                <RadioButton Content="Left" Command="{Binding ChangeBalloonTailDirectionCommand, Mode=OneTime}" CommandParameter="{x:Static ball:BalloonTailDirection.Left}"/>
+                <RadioButton Content="Top" Command="{Binding ChangeBalloonTailDirectionCommand, Mode=OneTime}" CommandParameter="{x:Static ball:BalloonTailDirection.Top}"/>
+                <RadioButton Content="Right" Command="{Binding ChangeBalloonTailDirectionCommand, Mode=OneTime}" CommandParameter="{x:Static ball:BalloonTailDirection.Right}"/>
+                <RadioButton Content="Bottom" Command="{Binding ChangeBalloonTailDirectionCommand, Mode=OneTime}" CommandParameter="{x:Static ball:BalloonTailDirection.Bottom}"/>
+            </StackPanel>
+        </GroupBox>
     </DockPanel>
 </UserControl>

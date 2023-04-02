@@ -1,6 +1,7 @@
 ﻿using GhostInTheShell.Modules.Balloon.Models;
 using GhostInTheShell.Modules.InfraStructure;
 using Microsoft.Extensions.Logging;
+using Prism.Events;
 using Prism.Regions;
 using System;
 using System.Collections;
@@ -30,12 +31,15 @@ namespace GhostInTheShell.Modules.Balloon
         BalloonItemsControlRegion _balloonContentsRegion;
         readonly ILogger _logger;
 
+        readonly BalloonPositionChangeEvent _balloonPositionChangeEvent;
         readonly List<BalloonContentModelBase> _lstContent = new List<BalloonContentModelBase>();
 
-        public BalloonService(ILogger<BalloonService> logger, IRegionManager regionManager)
+        public BalloonService(ILogger<BalloonService> logger, IEventAggregator eventAggregator, IRegionManager regionManager)
         {
             _logger = logger;
             _regionMgr = regionManager;
+
+            _balloonPositionChangeEvent = eventAggregator.GetEvent<BalloonPositionChangeEvent>();
         }
 
         public void AddText(string text)
@@ -74,6 +78,7 @@ namespace GhostInTheShell.Modules.Balloon
             _lstContent.Add(imgContent);
         }
 
+        public void ChangePosition(Point pos) => _balloonPositionChangeEvent.Publish(new BalloonPositionChangeEventArgs { Position = pos});
         public void Clear()
         {
             _balloonContentsRegion.RemoveAll();

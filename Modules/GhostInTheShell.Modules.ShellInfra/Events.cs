@@ -9,11 +9,16 @@ using System.Threading.Tasks;
 
 namespace GhostInTheShell.Modules.ShellInfra
 {
-    public class ShellPositionChangedEvent : PubSubEvent<Point>
+    public class ShellPositionChangedEventArgs : EventArgs
+    {
+        public Point CurrentPosition { get; set; }
+        public Point ChangedLength { get; set; }
+    }
+    public class ShellPositionChangedEvent : PubSubEvent<ShellPositionChangedEventArgs>
     {
 
     }
-    public class ShellSizeChangedEvent : PubSubEvent<Size>
+    public class ShellSizeChangedEvent : PubSubEvent<Size?>
     {
 
     }

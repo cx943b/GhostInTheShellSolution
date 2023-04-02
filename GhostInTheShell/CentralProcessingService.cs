@@ -1,4 +1,5 @@
 ﻿using GhostInTheShell.Modules.Balloon;
+using GhostInTheShell.Modules.Balloon.Controls;
 using GhostInTheShell.Modules.Script;
 using GhostInTheShell.Modules.ShellInfra;
 using Microsoft.Extensions.Logging;
@@ -27,6 +28,8 @@ namespace GhostInTheShell
         readonly List<SubscriptionToken> _lstSubToken = new List<SubscriptionToken>();
         readonly MaterialCollectionChangedEvent? _matCollChangeEvent = null;
 
+        public bool IsPositionSync { get; set; }
+
         public CentralProcessingService(
             ILogger<CentralProcessingService> logger,
             IEventAggregator eventAggregator,
@@ -45,6 +48,9 @@ namespace GhostInTheShell
             _lstSubToken.Add(eventAggregator.GetEvent<ClearWordsScriptCommandEvent>().Subscribe(() => _ballSvc.Clear(), ThreadOption.UIThread));
 
             _lstSubToken.Add(eventAggregator.GetEvent<ShellChangeScriptCommandEvent>().Subscribe(onShellChangeScriptCommandExecute));
+            _lstSubToken.Add(eventAggregator.GetEvent<ShellPositionChangedEvent>().Subscribe(onShellPositionChanged));
+
+
         }
 
         public void Dispose()
@@ -72,6 +78,14 @@ namespace GhostInTheShell
             {
                 _matCollChangeEvent!.Publish(new System.IO.MemoryStream(imgBytes));
             }
+        }
+        private void onShellPositionChanged(ShellPositionChangedEventArgs e)
+        {
+            if (!IsPositionSync)
+                return;
+
+
+            // balloonPositionChange
         }
     }
 

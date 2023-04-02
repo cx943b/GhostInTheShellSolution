@@ -1,4 +1,5 @@
 ﻿using GhostInTheShell.Modules.Balloon;
+using GhostInTheShell.Modules.Balloon.Controls;
 using GhostInTheShell.Modules.Script;
 using Microsoft.Extensions.Logging;
 using Prism.Commands;
@@ -34,21 +35,29 @@ namespace GhostInTheShell.ViewModels
         readonly DelegateCommand _AddTextCommand;
         readonly DelegateCommand _AddImageCommand;
         readonly DelegateCommand _ClearCommand;
+        readonly DelegateCommand<BalloonTailDirection?> _ChangeBalloonTailDirectionCommand;
 
         readonly ICentralProcessingService _centralSvc;
+        readonly BalloonTailDirectionChangeEvent _balloonTailDirectionChangeEvent;
 
         public ICommand AddTextCommand => _AddTextCommand;
         public ICommand AddImageCommand => _AddImageCommand;
         public ICommand ClearCommand => _ClearCommand;
+        public ICommand ChangeBalloonTailDirectionCommand => _ChangeBalloonTailDirectionCommand;
 
-        public MainViewModel(ICentralProcessingService centralSvc)
+        public MainViewModel(ICentralProcessingService centralSvc, IEventAggregator eventAggregator)
         {
+            _centralSvc = centralSvc ?? throw new ArgumentNullException(nameof(centralSvc));
+
             _AddTextCommand = new DelegateCommand(onAddTextExecute);
             _AddImageCommand = new DelegateCommand(onAddImageExecute);
             _ClearCommand = new DelegateCommand(onClearCommand);
+            _ChangeBalloonTailDirectionCommand = new DelegateCommand<BalloonTailDirection?>(onBalloonTailDireactionChangeExecute);
 
-            _centralSvc = centralSvc;
+            _balloonTailDirectionChangeEvent = eventAggregator.GetEvent<BalloonTailDirectionChangeEvent>();
         }
+
+        private void onBalloonTailDireactionChangeExecute(BalloonTailDirection? tailDirection) => _balloonTailDirectionChangeEvent.Publish(tailDirection);
 
         private void onAddTextExecute()
         {

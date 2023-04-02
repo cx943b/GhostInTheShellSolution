@@ -10,10 +10,6 @@ using System.Windows.Shapes;
 
 namespace GhostInTheShell.Modules.Balloon.Controls
 {
-    public enum BalloonTailDirection { Left, Right, Top, Bottom };
-
-    
-
     public class BalloonTail : Control
     {
         public const string PanelName = "PART_Canvas";

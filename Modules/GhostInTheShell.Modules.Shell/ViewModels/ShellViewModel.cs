@@ -78,12 +78,14 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
 
         
 
-        private void onShellSizeChanged(System.Drawing.Size shellSize)
+        private void onShellSizeChanged(System.Drawing.Size? shellSize)
         {
-            Width = shellSize.Width;
-            Height = shellSize.Height;
-            Left = SystemParameters.WorkArea.Width - shellSize.Width;
-            Top = SystemParameters.WorkArea.Height - shellSize.Height;
+            System.Drawing.Size size = shellSize.Value;
+
+            Width = size.Width;
+            Height = size.Height;
+            Left = SystemParameters.WorkArea.Width - size.Width;
+            Top = SystemParameters.WorkArea.Height - size.Height;
 
             ImageSize = new Size(_Width, _Height);
         }

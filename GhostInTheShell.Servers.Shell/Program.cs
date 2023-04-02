@@ -8,18 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddSingleton<IEventAggregator, EventAggregator>();
-builder.Services.AddSingleton<IShellModelFactory, ShellModelRemoteFactory>();
-//builder.Services.AddSingleton<IShellModelFactory>(prov =>
-//{
-//    ILogger<ShellModelRemoteFactory> logger = prov.GetRequiredService<ILogger<ShellModelRemoteFactory>>();
-//    IConfiguration config = prov.GetRequiredService<IConfiguration>();
-//    HttpClient client = prov.GetRequiredService<HttpClient>();
-
-//    return new ShellModelRemoteFactory(logger, config, client);
-//});
-builder.Services.AddSingleton<IShellModelFactory>();
-
-builder.Services.AddSingleton<IShellMaterialFactory, ShellMaterialRemoteFactory>();
+builder.Services.AddSingleton<IShellModelFactory, ShellModelLocalFactory>();
+builder.Services.AddSingleton<IShellMaterialFactory, ShellMaterialLocalFactory>();
 builder.Services.AddSingleton<ICharacterLocalService, CharacterLocalService>();
 
 //if(builder.Environment.IsDevelopment())
