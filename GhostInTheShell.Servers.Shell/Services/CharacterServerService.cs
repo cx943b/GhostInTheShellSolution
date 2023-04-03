@@ -1,5 +1,4 @@
-using GhostInTheShell.Modules.ShellInfra;
-using GhostInTheShell.Servers.Shell;
+using GhostInTheShell.Modules.InfraStructure;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
@@ -10,17 +9,37 @@ namespace GhostInTheShell.Servers.Shell.Services
     public class CharacterServerService : CharacterServer.CharacterServerBase
     {
         readonly ILogger _logger;
-        readonly ICharacterLocalService _charLocalSvc;
+        readonly IDictionary<string, ICharacterLocalService> _dicCharLocalSvc = new Dictionary<string, ICharacterLocalService>();
        
-        public CharacterServerService(ILogger<CharacterServerService> logger, ICharacterLocalService charLocalSvc)
+        public CharacterServerService(ILogger<CharacterServerService> logger, IFuminoCharacterLocalService fuminoCharLocalSvc, IKaoriCharacterLocalService kaoriCharLocalSvc)
         {
             _logger = logger;
-            _charLocalSvc = charLocalSvc;
+
+            if(fuminoCharLocalSvc is null)
+                throw new ArgumentNullException(nameof(fuminoCharLocalSvc));
+            if (kaoriCharLocalSvc is null)
+                throw new ArgumentNullException(nameof(kaoriCharLocalSvc));
+
+            _dicCharLocalSvc.Add(ShellNames.Fumino, fuminoCharLocalSvc);
+            _dicCharLocalSvc.Add(ShellNames.Kaori, kaoriCharLocalSvc);
         }
 
-        public override Task<CharacterSizeResponse> GetCharacterSize(Empty request, ServerCallContext context)
+        public override Task<CharacterSizeResponse> GetCharacterSize(CharacterSizeRequest request, ServerCallContext context)
         {
-            var size = _charLocalSvc.ShellSize;
+            string? charName = request.CharName;
+            if (String.IsNullOrEmpty(charName))
+            {
+                _logger.Log(LogLevel.Warning, $"NullRef: {charName}");
+                return Task.FromResult(new CharacterSizeResponse { IsOk = false });
+            }
+                
+            if(!_dicCharLocalSvc.ContainsKey(charName))
+            {
+                _logger.Log(LogLevel.Warning, $"KeyNotFound: {charName}");
+                return Task.FromResult(new CharacterSizeResponse { IsOk = false });
+            }
+
+            var size = _dicCharLocalSvc[charName];
 
             CharacterSizeResponse sizeRes = new CharacterSizeResponse { IsOk = true, Width = size.Width, Height = size.Height };
             return Task.FromResult(sizeRes);
@@ -28,7 +47,7 @@ namespace GhostInTheShell.Servers.Shell.Services
 
         public override async Task<CharacterImageResponse> GetCharacterImage(CharacterImageRequest request, ServerCallContext context)
         {
-            (byte[]? characterBytes, string resultMsg) = await _charLocalSvc.GetCharacterImage(request.HeadLabel, request.EyeLabel, request.FaceLabel);
+            (byte[]? characterBytes, string resultMsg) = await _dicCharLocalSvc["ddd"].GetCharacterImage(request.HeadLabel, request.EyeLabel, request.FaceLabel);
             if(characterBytes is not null)
             {
                 return new CharacterImageResponse { IsOk = true, Message = "", ImageBytes = ByteString.CopyFrom(characterBytes) };

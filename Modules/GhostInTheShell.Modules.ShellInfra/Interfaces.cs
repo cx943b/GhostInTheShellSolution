@@ -32,7 +32,7 @@ namespace GhostInTheShell.Modules.ShellInfra
     public interface IShellService
     {
         Task<byte[]?> RequestShellImageAsync(string headLabel, string eyeLabel, string faceLabel);
-        Task<Size> RequestShellSizeAsync();
+        Task<Size> RequestShellSizeAsync(string shellName);
     }
     public interface ICharacterService
     {

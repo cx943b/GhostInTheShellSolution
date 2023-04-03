@@ -35,13 +35,13 @@ namespace GhostInTheShell.Modules.ShellInfra
             _grpcClient = new CharacterServer.CharacterServerClient(channel);
         }
 
-        public async Task<Size> RequestShellSizeAsync()
+        public async Task<Size> RequestShellSizeAsync(string shellName)
         {
             var emptyReq = new Google.Protobuf.WellKnownTypes.Empty();
 
             try
             {
-                var sizeRes = await _grpcClient.GetCharacterSizeAsync(emptyReq);
+                var sizeRes = await _grpcClient.GetCharacterSizeAsync(new CharacterSizeRequest { CharName = shellName });
                 return new Size(sizeRes.Width, sizeRes.Height);
             }
             catch (Exception ex)
