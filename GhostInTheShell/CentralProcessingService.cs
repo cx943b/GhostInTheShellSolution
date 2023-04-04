@@ -74,7 +74,7 @@ namespace GhostInTheShell
         }
         private async void onShellChangeScriptCommandExecute(ShellChangeScriptCommandEventArgs e)
         {
-            var imgBytes = await _shellSvc.RequestShellImageAsync(ShellNames.Kaori ,e.HeadLabel, e.EyeLabel, e.FaceLabel);
+            var imgBytes = await _shellSvc.RequestShellImageAsync(ShellNames.Kaori,e.HeadLabel, e.EyeLabel, e.FaceLabel);
             if(imgBytes is not null)
             {
                 _matCollChangeEvent!.Publish(new System.IO.MemoryStream(imgBytes));

@@ -22,6 +22,8 @@ namespace GhostInTheShell.Modules.Shell
 {
     public sealed class ShellModule : IModule
     {
+        const string ShellName = ShellNames.Kaori;
+
         readonly ILogger _logger;
 
         IShellService? _charClientSvc;
@@ -37,18 +39,18 @@ namespace GhostInTheShell.Modules.Shell
             _charClientSvc = containerProvider.Resolve<IShellService>();
             if(_charClientSvc is null)
             {
-                _logger.Log(LogLevel.Error, "NullRef: ICharacterClientService");
+                _logger.Log(LogLevel.Error, $"NullRef: {nameof(_charClientSvc)}");
                 return;
             }
 
-            var shellSize = await _charClientSvc.RequestShellSizeAsync(ShellNames.Kaori);
+            var shellSize = await _charClientSvc.RequestShellSizeAsync(ShellName);
             if (shellSize == System.Drawing.Size.Empty)
             {
-                _logger.Log(LogLevel.Error, "InvalidRes: ShellSize");
+                _logger.Log(LogLevel.Error, $"InvalidRes: {nameof(shellSize)}");
                 return;
             }
 
-            Task<byte[]?> reqImageTask = _charClientSvc.RequestShellImageAsync(ShellNames.Kaori, "부끄럼0", "중간-무광", "미소");
+            Task<byte[]?> reqImageTask = _charClientSvc.RequestShellImageAsync(ShellName, "부끄럼0", "중간-무광", "미소");
             var eventAggr = containerProvider.Resolve<IEventAggregator>();
             _matCollChangedEvent = eventAggr.GetEvent<MaterialCollectionChangedEvent>();
 
@@ -75,7 +77,7 @@ namespace GhostInTheShell.Modules.Shell
 
         private async void onShellChangeExecute(ShellChangeScriptCommandEventArgs e)
         {
-            var imgBytes = await _charClientSvc!.RequestShellImageAsync(ShellNames.Kaori, e.HeadLabel, e.EyeLabel, e.FaceLabel);
+            var imgBytes = await _charClientSvc!.RequestShellImageAsync(ShellName, e.HeadLabel, e.EyeLabel, e.FaceLabel);
 
             if (imgBytes is null)
             {
