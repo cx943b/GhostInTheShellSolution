@@ -30,16 +30,16 @@ namespace GhostInTheShell.Servers.Shell.Services
             if (String.IsNullOrEmpty(charName))
             {
                 _logger.Log(LogLevel.Warning, $"NullRef: {charName}");
-                return Task.FromResult(new CharacterSizeResponse { IsOk = false });
+                return Task.FromResult(new CharacterSizeResponse());
             }
                 
             if(!_dicCharLocalSvc.ContainsKey(charName))
             {
                 _logger.Log(LogLevel.Warning, $"KeyNotFound: {charName}");
-                return Task.FromResult(new CharacterSizeResponse { IsOk = false });
+                return Task.FromResult(new CharacterSizeResponse());
             }
 
-            var size = _dicCharLocalSvc[charName];
+            var size = _dicCharLocalSvc[charName].ShellSize;
 
             CharacterSizeResponse sizeRes = new CharacterSizeResponse { IsOk = true, Width = size.Width, Height = size.Height };
             return Task.FromResult(sizeRes);
@@ -47,7 +47,20 @@ namespace GhostInTheShell.Servers.Shell.Services
 
         public override async Task<CharacterImageResponse> GetCharacterImage(CharacterImageRequest request, ServerCallContext context)
         {
-            (byte[]? characterBytes, string resultMsg) = await _dicCharLocalSvc["ddd"].GetCharacterImage(request.HeadLabel, request.EyeLabel, request.FaceLabel);
+            string? charName = request.CharName;
+            if (String.IsNullOrEmpty(charName))
+            {
+                _logger.Log(LogLevel.Warning, $"NullRef: {charName}");
+                return new CharacterImageResponse();
+            }
+
+            if (!_dicCharLocalSvc.ContainsKey(charName))
+            {
+                _logger.Log(LogLevel.Warning, $"KeyNotFound: {charName}");
+                return new CharacterImageResponse();
+            }
+
+            (byte[]? characterBytes, string resultMsg) = await _dicCharLocalSvc[charName].GetCharacterImage(request.HeadLabel, request.EyeLabel, request.FaceLabel);
             if(characterBytes is not null)
             {
                 return new CharacterImageResponse { IsOk = true, Message = "", ImageBytes = ByteString.CopyFrom(characterBytes) };
@@ -55,7 +68,7 @@ namespace GhostInTheShell.Servers.Shell.Services
             else
             {
                 _logger.Log(LogLevel.Warning, $"NullRef: {nameof(characterBytes)}");
-                return new CharacterImageResponse() { Message = resultMsg };
+                return new CharacterImageResponse() { Message = resultMsg };    // Use message for Debug
             }
         }
     }

@@ -1,3 +1,4 @@
+using GhostInTheShell.Modules.InfraStructure;
 using GhostInTheShell.Modules.ShellInfra;
 using GhostInTheShell.Servers.Shell;
 using GhostInTheShell.Servers.Shell.Services;
@@ -8,9 +9,36 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddSingleton<IEventAggregator, EventAggregator>();
-builder.Services.AddSingleton<IShellModelFactory, ShellModelLocalFactory>();
+builder.Services.AddScoped<IShellModelFactory, ShellModelLocalFactory>();
 builder.Services.AddSingleton<IShellMaterialFactory, ShellMaterialLocalFactory>();
-builder.Services.AddSingleton<ICharacterLocalService, CharacterLocalService>();
+builder.Services.AddSingleton<IFuminoCharacterLocalService, FuminoCharacterLocalService>(prov =>
+{
+    ILogger<FuminoCharacterLocalService> logger = prov.GetRequiredService<ILogger<FuminoCharacterLocalService>>();
+    IEventAggregator eventAggregator = prov.GetRequiredService<IEventAggregator>();
+    IConfiguration config = prov.GetRequiredService<IConfiguration>();
+
+    IShellModelFactory modelFac = prov.GetRequiredService<IShellModelFactory>();
+    modelFac.InitializeAsync(ShellNames.Fumino).Await();
+
+    IShellMaterialFactory materialFac = prov.GetRequiredService<IShellMaterialFactory>();
+
+    FuminoCharacterLocalService fuminoCharSvc = new FuminoCharacterLocalService(logger, eventAggregator, config, modelFac, materialFac);
+    return fuminoCharSvc;
+});
+builder.Services.AddSingleton<IKaoriCharacterLocalService, KaoriCharacterLocalService>(prov =>
+{
+    ILogger<KaoriCharacterLocalService> logger = prov.GetRequiredService<ILogger<KaoriCharacterLocalService>>();
+    IEventAggregator eventAggregator = prov.GetRequiredService<IEventAggregator>();
+    IConfiguration config = prov.GetRequiredService<IConfiguration>();
+
+    IShellModelFactory modelFac = prov.GetRequiredService<IShellModelFactory>();
+    modelFac.InitializeAsync(ShellNames.Kaori).Await();
+
+    IShellMaterialFactory materialFac = prov.GetRequiredService<IShellMaterialFactory>();
+
+    KaoriCharacterLocalService kaoriCharSvc = new KaoriCharacterLocalService(logger, eventAggregator, config, modelFac, materialFac);
+    return kaoriCharSvc;
+});
 
 //if(builder.Environment.IsDevelopment())
 {
@@ -51,42 +79,30 @@ if(!builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
-bool isModelFactoryReady = await app.Services
-    .GetRequiredService<IShellModelFactory>()
-    .InitializeAsync("Kaori");
+bool isKaoriCharSvcReady = await app.Services.GetRequiredService<IKaoriCharacterLocalService>().InitializeAsync();
+bool isFuminoCharSvcReady = await app.Services.GetRequiredService<IFuminoCharacterLocalService>().InitializeAsync();
 
-if (!isModelFactoryReady)
+
+if (!isKaoriCharSvcReady)
 {
-    app.Logger.Log(LogLevel.Error, $"FailInitialize: {nameof(ShellModelLocalFactory)}, Enter to Exit.");
+    app.Logger.Log(LogLevel.Error, $"FailInitialize: {nameof(IKaoriCharacterLocalService)}, Enter to Exit.");
+    Console.ReadLine();
+}
+else if (!isFuminoCharSvcReady)
+{
+    app.Logger.Log(LogLevel.Error, $"FailInitialize: {nameof(IFuminoCharacterLocalService)}, Enter to Exit.");
     Console.ReadLine();
 }
 
-Console.WriteLine("Initialized: ModelFactory.");
+Console.WriteLine("Initialized: CharacterLocalServices.");
+Console.WriteLine("CharacterServices is Ready.");
 
-var charLocalSvc = app.Services.GetRequiredService<ICharacterLocalService>();
-bool isCharSvcReady = await charLocalSvc.InitializeAsync("Kaori");
-
-if (!isCharSvcReady)
+//if(app.Environment.IsDevelopment())
 {
-    string msg = $"FailInitialize {nameof(CharacterLocalService)}";
-
-    app.Logger.LogError(msg);
-    Console.WriteLine(msg);
-
-    Console.Write("Enter to exit.");
-    Console.ReadLine();
+    app.MapGrpcReflectionService();
 }
-else
-{
-    Console.WriteLine("CharacterService is Ready.");
 
-    //if(app.Environment.IsDevelopment())
-    {
-        app.MapGrpcReflectionService();
-    }
-
-    // Configure the HTTP request pipeline.
-    app.MapGrpcService<CharacterServerService>();
-    app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
-    app.Run();
-}
+// Configure the HTTP request pipeline.
+app.MapGrpcService<CharacterServerService>();
+app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
+app.Run();

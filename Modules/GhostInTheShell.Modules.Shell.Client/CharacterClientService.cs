@@ -5,12 +5,13 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
+using GhostInTheShell.Modules.ShellInfra;
 using GhostInTheShell.Servers.Shell;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace GhostInTheShell.Modules.ShellInfra
+namespace GhostInTheShell.Modules.Shell.Client
 {
     public class ShellService : IShellService
     {
@@ -23,7 +24,7 @@ namespace GhostInTheShell.Modules.ShellInfra
         public ShellService(ILogger<ShellService> logger, IConfiguration config)
         {
             _logger = logger;
-
+            
             if(config is null)
                 throw new NullReferenceException(nameof(config));            
 
@@ -37,8 +38,6 @@ namespace GhostInTheShell.Modules.ShellInfra
 
         public async Task<Size> RequestShellSizeAsync(string shellName)
         {
-            var emptyReq = new Google.Protobuf.WellKnownTypes.Empty();
-
             try
             {
                 var sizeRes = await _grpcClient.GetCharacterSizeAsync(new CharacterSizeRequest { CharName = shellName });
@@ -51,9 +50,10 @@ namespace GhostInTheShell.Modules.ShellInfra
             }
         }
 
-        public async Task<byte[]?> RequestShellImageAsync(string headLabel, string eyeLabel, string faceLabel)
+        public async Task<byte[]?> RequestShellImageAsync(string shellName, string headLabel, string eyeLabel, string faceLabel)
         { 
             CharacterImageRequest charReq = new CharacterImageRequest();
+            charReq.CharName = shellName;
             charReq.HeadLabel = headLabel;
             charReq.EyeLabel = eyeLabel;
             charReq.FaceLabel = faceLabel;

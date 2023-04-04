@@ -31,10 +31,10 @@ namespace GhostInTheShell.Modules.ShellInfra
 
     public interface IShellService
     {
-        Task<byte[]?> RequestShellImageAsync(string headLabel, string eyeLabel, string faceLabel);
+        Task<byte[]?> RequestShellImageAsync(string shellName, string headLabel, string eyeLabel, string faceLabel);
         Task<Size> RequestShellSizeAsync(string shellName);
     }
-    public interface ICharacterService
+    public interface ICharacterService : ICharacter
     {
         Task AddAccessories(IEnumerable<AccessoryAddPair> dicAccessoryParts);
         bool ChangeAccessoryColor(ShellPartType partType, Hsl hslColor);

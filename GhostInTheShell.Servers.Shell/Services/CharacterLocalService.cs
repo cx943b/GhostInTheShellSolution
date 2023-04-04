@@ -6,7 +6,7 @@ using System.Drawing.Imaging;
 
 namespace GhostInTheShell.Servers.Shell.Services
 {
-    public interface ICharacterLocalService : ICharacterService, ICharacter
+    public interface ICharacterLocalService : ICharacterService
     {
         Task<(byte[]?, string)> GetCharacterImage(string headLabel, string eyeLabel, string faceLabel);
     }
@@ -18,7 +18,8 @@ namespace GhostInTheShell.Servers.Shell.Services
         readonly ILogger _logger;
         readonly IShellModelFactory _modelFac;
         readonly string _tableRoot;
-        readonly IDictionary<ShellPartType, IEnumerable<string>>? _dicLabels = new Dictionary<ShellPartType, IEnumerable<string>>();
+        readonly IDictionary<ShellPartType, IEnumerable<string>> _dicLabels = new Dictionary<ShellPartType, IEnumerable<string>>();
+
 
         //readonly IDictionary<string, IList<string>> _dicSavedFileNames = new Dictionary<string, IList<string>>();
 

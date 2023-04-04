@@ -16,6 +16,7 @@ using Prism.Events;
 using System.ComponentModel;
 using GhostInTheShell.Modules.Script;
 using Microsoft.Extensions.Logging;
+using GhostInTheShell.Modules.Shell.Client;
 
 namespace GhostInTheShell.Modules.Shell
 {
@@ -40,14 +41,14 @@ namespace GhostInTheShell.Modules.Shell
                 return;
             }
 
-            var shellSize = await _charClientSvc.RequestShellSizeAsync();
+            var shellSize = await _charClientSvc.RequestShellSizeAsync(ShellNames.Kaori);
             if (shellSize == System.Drawing.Size.Empty)
             {
                 _logger.Log(LogLevel.Error, "InvalidRes: ShellSize");
                 return;
             }
 
-            Task<byte[]?> reqImageTask = _charClientSvc.RequestShellImageAsync("부끄럼0", "중간-무광", "미소");
+            Task<byte[]?> reqImageTask = _charClientSvc.RequestShellImageAsync(ShellNames.Kaori, "부끄럼0", "중간-무광", "미소");
             var eventAggr = containerProvider.Resolve<IEventAggregator>();
             _matCollChangedEvent = eventAggr.GetEvent<MaterialCollectionChangedEvent>();
 
@@ -74,7 +75,7 @@ namespace GhostInTheShell.Modules.Shell
 
         private async void onShellChangeExecute(ShellChangeScriptCommandEventArgs e)
         {
-            var imgBytes = await _charClientSvc!.RequestShellImageAsync(e.HeadLabel, e.EyeLabel, e.FaceLabel);
+            var imgBytes = await _charClientSvc!.RequestShellImageAsync(ShellNames.Kaori, e.HeadLabel, e.EyeLabel, e.FaceLabel);
 
             if (imgBytes is null)
             {

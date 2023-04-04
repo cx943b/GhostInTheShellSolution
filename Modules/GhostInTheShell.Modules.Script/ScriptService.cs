@@ -1,4 +1,5 @@
-﻿using GhostInTheShell.Modules.ShellInfra;
+﻿using GhostInTheShell.Modules.InfraStructure;
+using GhostInTheShell.Modules.ShellInfra;
 using Microsoft.Extensions.Logging;
 using Prism.Events;
 using System;
@@ -181,7 +182,7 @@ namespace GhostInTheShell.Modules.Script
                                     string[] charParams = paramStr.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                                     if(charParams.Length == 3)
                                     {
-                                        byte[]? imgBytes = await _charClientSvc.RequestShellImageAsync(charParams[0], charParams[1], charParams[2]);
+                                        byte[]? imgBytes = await _charClientSvc.RequestShellImageAsync(ShellNames.Kaori, charParams[0], charParams[1], charParams[2]);
                                         if(imgBytes is null)
                                         {
                                             throw new ArgumentException($"ScriptError-InvalidResponses: {ScriptCommandChar.ChangeShell}");

@@ -27,11 +27,4 @@
   <ItemGroup>
     <ProjectReference Include="..\GhostInTheShell.Modules.InfraStructure\GhostInTheShell.Modules.InfraStructure.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Protobuf Include="..\..\GhostInTheShell.Servers.Shell\Protos\server.proto" GrpcServices="Client">
-      <Link>Protos\server.proto</Link>
-    </Protobuf>
-  </ItemGroup>
-
 </Project>

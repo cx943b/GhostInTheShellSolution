@@ -1,5 +1,6 @@
 ﻿using GhostInTheShell.Modules.Balloon;
 using GhostInTheShell.Modules.Balloon.Controls;
+using GhostInTheShell.Modules.InfraStructure;
 using GhostInTheShell.Modules.Script;
 using GhostInTheShell.Modules.ShellInfra;
 using Microsoft.Extensions.Logging;
@@ -73,7 +74,7 @@ namespace GhostInTheShell
         }
         private async void onShellChangeScriptCommandExecute(ShellChangeScriptCommandEventArgs e)
         {
-            var imgBytes = await _shellSvc.RequestShellImageAsync(e.HeadLabel, e.EyeLabel, e.FaceLabel);
+            var imgBytes = await _shellSvc.RequestShellImageAsync(ShellNames.Kaori ,e.HeadLabel, e.EyeLabel, e.FaceLabel);
             if(imgBytes is not null)
             {
                 _matCollChangeEvent!.Publish(new System.IO.MemoryStream(imgBytes));

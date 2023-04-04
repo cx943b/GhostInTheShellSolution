@@ -24,9 +24,9 @@ namespace GhostInTheShell.Servers.Shell.Services
 
         public Task<bool> InitializeAsync() => base.InitializeAsync(ShellNames.Fumino);
     }
-    public class KaoriCharacterLocalServic: CharacterLocalService, IKaoriCharacterLocalService
+    public class KaoriCharacterLocalService: CharacterLocalService, IKaoriCharacterLocalService
     {
-        public KaoriCharacterLocalServic(ILogger<CharacterLocalService> logger, IEventAggregator eventAggregator, IConfiguration config, IShellModelFactory modelFac, IShellMaterialFactory matFac)
+        public KaoriCharacterLocalService(ILogger<CharacterLocalService> logger, IEventAggregator eventAggregator, IConfiguration config, IShellModelFactory modelFac, IShellMaterialFactory matFac)
             : base(logger, eventAggregator, config, modelFac, matFac)
         {
         }
