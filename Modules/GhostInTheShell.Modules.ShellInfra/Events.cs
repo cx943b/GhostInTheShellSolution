@@ -9,11 +9,33 @@ using System.Threading.Tasks;
 
 namespace GhostInTheShell.Modules.ShellInfra
 {
-    public class ShellPositionChangedEventArgs : EventArgs
+    public abstract class ShellEventArgs : EventArgs
+    {
+        public string ShellName { get; init; }
+
+        public ShellEventArgs(string shellName)
+        {
+            ShellName = shellName ?? throw new ArgumentNullException(nameof(shellName));
+        }
+    }
+    public class ShellPositionChangedEventArgs : ShellEventArgs
     {
         public Point CurrentPosition { get; set; }
         public Point ChangedLength { get; set; }
+
+        public ShellPositionChangedEventArgs(string shellName) : base(shellName) { }
     }
+    public class MaterialCollectionChangedEventArgs : ShellEventArgs
+    {
+        public MemoryStream Stream { get; init; }
+
+        public MaterialCollectionChangedEventArgs(string shellName, MemoryStream stream) : base(shellName)
+        {
+            Stream = stream ?? throw new ArgumentNullException(nameof(stream));
+        }
+    }
+
+
     public class ShellPositionChangedEvent : PubSubEvent<ShellPositionChangedEventArgs>
     {
 
@@ -22,7 +44,7 @@ namespace GhostInTheShell.Modules.ShellInfra
     {
 
     }
-    public class MaterialCollectionChangedEvent : PubSubEvent<MemoryStream>
+    public class MaterialCollectionChangedEvent : PubSubEvent<MaterialCollectionChangedEventArgs>
     {
 
     }

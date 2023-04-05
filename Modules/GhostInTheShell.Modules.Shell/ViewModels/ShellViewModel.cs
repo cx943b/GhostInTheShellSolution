@@ -26,6 +26,7 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
         double _Left = 400, _Top;
         double _Width, _Height;
 
+        public string? ShellName { get; private set; }
         public event Action<IDialogResult> RequestClose = null!;
 
         public BitmapImage? ImageSource
@@ -126,6 +127,10 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
             if (parameters.TryGetValue(nameof(ShellViewModel.ImageSize), out System.Drawing.Size imgSize))
             {
                 onShellSizeChanged(imgSize);
+            }
+            else if(parameters.TryGetValue(nameof(ShellViewModel.ShellName), out string shellName))
+            {
+                ShellName = shellName;
             }
             else
             {
