@@ -58,20 +58,22 @@ namespace GhostInTheShell.Modules.Shell
 
             var eventAggr = containerProvider.Resolve<IEventAggregator>();
             var dialogSvc = containerProvider.Resolve<IDialogService>();
+            var matCollChangedEvent = eventAggr.GetEvent<MaterialCollectionChangedEvent>();
 
-            foreach(string shellName in shellNames)
-                await prepareShell(shellName, shellSvc, eventAggr, dialogSvc);
+            foreach (string shellName in shellNames)
+                await prepareShell(shellName, shellSvc, matCollChangedEvent, eventAggr, dialogSvc);
         }
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
             containerRegistry.RegisterSingleton<IShellService, ShellService>();
             
-            containerRegistry.RegisterDialog<ShellView, ShellViewModel>(nameof(ShellView));
+            containerRegistry.RegisterDialog<ShellView, ShellViewModel>(ShellNames.Kaori + nameof(ShellView));
+            containerRegistry.RegisterDialog<ShellView, ShellViewModel>(ShellNames.Fumino + nameof(ShellView));
             containerRegistry.RegisterDialogWindow<ShellWindow>(nameof(ShellWindow));
         }
 
-        private async Task prepareShell(string shellName, IShellService shellSvc, IEventAggregator eventAggr, IDialogService dialogSvc)
+        private async Task prepareShell(string shellName, IShellService shellSvc, MaterialCollectionChangedEvent matCollChangedEvent, IEventAggregator eventAggr, IDialogService dialogSvc)
         {
             var shellSize = await shellSvc.RequestShellSizeAsync(shellName);
             if (shellSize == System.Drawing.Size.Empty)
@@ -81,11 +83,14 @@ namespace GhostInTheShell.Modules.Shell
             }
 
             Task<byte[]?> reqImageTask = shellSvc.RequestShellImageAsync(ShellNames.Kaori, "부끄럼0", "중간-무광", "미소");
-            
-            _matCollChangedEvent = eventAggr.GetEvent<MaterialCollectionChangedEvent>();
 
-            
-            dialogSvc.Show(nameof(ShellView), new DialogParameters { { nameof(ShellViewModel.ImageSize), shellSize } }, null, nameof(ShellWindow));
+            DialogParameters dialParams = new DialogParameters
+            {
+                { nameof(ShellViewModel.ImageSize), shellSize },
+                { "ShellName", shellName }
+            };
+
+            dialogSvc.Show(shellName + nameof(ShellView), dialParams, null, nameof(ShellWindow));
 
             var imgBytes = await reqImageTask.WaitAsync(TimeSpan.FromMilliseconds(10000));
             if (imgBytes is null)
@@ -94,7 +99,7 @@ namespace GhostInTheShell.Modules.Shell
                 return;
             }
 
-            _matCollChangedEvent.Publish(new System.IO.MemoryStream(imgBytes));
+            matCollChangedEvent.Publish(new System.IO.MemoryStream(imgBytes));
         }
     }
 }
