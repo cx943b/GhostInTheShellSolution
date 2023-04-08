@@ -18,6 +18,7 @@ using GhostInTheShell.Modules.Script;
 using Microsoft.Extensions.Logging;
 using GhostInTheShell.Modules.Shell.Client;
 using Microsoft.Extensions.Configuration;
+using GhostInTheShell.Modules.MvvmInfra;
 
 namespace GhostInTheShell.Modules.Shell
 {
@@ -82,12 +83,12 @@ namespace GhostInTheShell.Modules.Shell
                 return;
             }
 
-            Task<byte[]?> reqImageTask = shellSvc.RequestShellImageAsync(ShellNames.Kaori, "부끄럼0", "중간-무광", "미소");
+            Task<byte[]?> reqImageTask = shellSvc.RequestShellImageAsync(shellName, "부끄럼0", "중간-무광", "미소");
 
             DialogParameters dialParams = new DialogParameters
             {
                 { nameof(ShellViewModel.ImageSize), shellSize },
-                { "ShellName", shellName }
+                { nameof(ShellViewModel.Identifier), shellName }
             };
 
             dialogSvc.Show(shellName + nameof(ShellView), dialParams, null, nameof(ShellWindow));
@@ -99,7 +100,7 @@ namespace GhostInTheShell.Modules.Shell
                 return;
             }
 
-            matCollChangedEvent.Publish(new System.IO.MemoryStream(imgBytes));
+            matCollChangedEvent.Publish(new MaterialCollectionChangedEventArgs(shellName, new System.IO.MemoryStream(imgBytes)));
         }
     }
 }

@@ -17,8 +17,8 @@ namespace GhostInTheShell.Servers.Shell.Services
 
     public class FuminoCharacterLocalService : CharacterLocalService, IFuminoCharacterLocalService
     {
-        public FuminoCharacterLocalService(ILogger<CharacterLocalService> logger, IEventAggregator eventAggregator, IConfiguration config, IShellModelFactory modelFac, IShellMaterialFactory matFac)
-            : base(logger, eventAggregator, config, modelFac, matFac)
+        public FuminoCharacterLocalService(ILogger<CharacterLocalService> logger, IConfiguration config, IShellModelFactory modelFac, IShellMaterialFactory matFac)
+            : base(logger, config, modelFac, matFac)
         {
         }
 
@@ -26,8 +26,8 @@ namespace GhostInTheShell.Servers.Shell.Services
     }
     public class KaoriCharacterLocalService: CharacterLocalService, IKaoriCharacterLocalService
     {
-        public KaoriCharacterLocalService(ILogger<CharacterLocalService> logger, IEventAggregator eventAggregator, IConfiguration config, IShellModelFactory modelFac, IShellMaterialFactory matFac)
-            : base(logger, eventAggregator, config, modelFac, matFac)
+        public KaoriCharacterLocalService(ILogger<CharacterLocalService> logger, IConfiguration config, IShellModelFactory modelFac, IShellMaterialFactory matFac)
+            : base(logger, config, modelFac, matFac)
         {
         }
 

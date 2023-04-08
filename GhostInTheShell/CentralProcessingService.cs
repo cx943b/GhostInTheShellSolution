@@ -48,7 +48,7 @@ namespace GhostInTheShell
             _lstSubToken.Add(eventAggregator.GetEvent<PrintWordScriptCommandEvent>().Subscribe(onPrintWordScriptCommandExecute,ThreadOption.UIThread));
             _lstSubToken.Add(eventAggregator.GetEvent<ClearWordsScriptCommandEvent>().Subscribe(() => _ballSvc.Clear(), ThreadOption.UIThread));
 
-            _lstSubToken.Add(eventAggregator.GetEvent<ShellChangeScriptCommandEvent>().Subscribe(onShellChangeScriptCommandExecute));
+            //_lstSubToken.Add(eventAggregator.GetEvent<ShellChangeScriptCommandEvent>().Subscribe(onShellChangeScriptCommandExecute));
             _lstSubToken.Add(eventAggregator.GetEvent<ShellPositionChangedEvent>().Subscribe(onShellPositionChanged));
 
 
@@ -72,14 +72,14 @@ namespace GhostInTheShell
         {
             _ballSvc.AddText(e.PrintWord);
         }
-        private async void onShellChangeScriptCommandExecute(ShellChangeScriptCommandEventArgs e)
-        {
-            var imgBytes = await _shellSvc.RequestShellImageAsync(ShellNames.Kaori ,e.HeadLabel, e.EyeLabel, e.FaceLabel);
-            if(imgBytes is not null)
-            {
-                _matCollChangeEvent!.Publish(new System.IO.MemoryStream(imgBytes));
-            }
-        }
+        //private async void onShellChangeScriptCommandExecute(ShellChangeScriptCommandEventArgs e)
+        //{
+        //    var imgBytes = await _shellSvc.RequestShellImageAsync(ShellNames.Kaori ,e.HeadLabel, e.EyeLabel, e.FaceLabel);
+        //    if(imgBytes is not null)
+        //    {
+        //        _matCollChangeEvent!.Publish(new System.IO.MemoryStream(imgBytes));
+        //    }
+        //}
         private void onShellPositionChanged(ShellPositionChangedEventArgs e)
         {
             if (!IsPositionSync)

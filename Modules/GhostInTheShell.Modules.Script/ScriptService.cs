@@ -26,6 +26,8 @@ namespace GhostInTheShell.Modules.Script
         const char ParamStringOpenChar = '[';
         const char ParamStringCloseChar = ']';
 
+        string? _currentIdentifier;
+
         readonly ILogger _logger;
         readonly IShellService _charClientSvc;
 
@@ -33,7 +35,7 @@ namespace GhostInTheShell.Modules.Script
         readonly PrintWordScriptCommandEvent _printWordScriptCommandEvent;
         readonly TalkerChangeScriptCommandEvent _talkerChangeScriptCommandEvent;
         readonly ScriptExecuteCompletedEvent _scriptExecuteCompletedEvent;
-        readonly ShellChangeScriptCommandEvent _shellChangeScriptCommandEvent;
+        //readonly ShellChangeScriptCommandEvent _shellChangeScriptCommandEvent;
         readonly MaterialCollectionChangedEvent _materialCollectionChangedEvent;
 
         readonly IDictionary<int, MemoryStream> _dicImageStream = new Dictionary<int, MemoryStream>();
@@ -53,7 +55,7 @@ namespace GhostInTheShell.Modules.Script
             _printWordScriptCommandEvent = eventAggregator.GetEvent<PrintWordScriptCommandEvent>();
             _talkerChangeScriptCommandEvent = eventAggregator.GetEvent<TalkerChangeScriptCommandEvent>();
             _scriptExecuteCompletedEvent = eventAggregator.GetEvent<ScriptExecuteCompletedEvent>();
-            _shellChangeScriptCommandEvent = eventAggregator.GetEvent<ShellChangeScriptCommandEvent>();
+            //_shellChangeScriptCommandEvent = eventAggregator.GetEvent<ShellChangeScriptCommandEvent>();
             _materialCollectionChangedEvent = eventAggregator.GetEvent<MaterialCollectionChangedEvent>();
         }
 
@@ -119,7 +121,7 @@ namespace GhostInTheShell.Modules.Script
                         }
                     case ShellChangeScriptCommand shellChangeScriptCmd:
                         {
-                            _materialCollectionChangedEvent.Publish(_dicImageStream[shellChangeScriptCmd.ImageIndex]);
+                            _materialCollectionChangedEvent.Publish(new MaterialCollectionChangedEventArgs(_currentIdentifier, _dicImageStream[shellChangeScriptCmd.ImageIndex]));
                             //_shellChangeScriptCommandEvent.Publish(new ShellChangeScriptCommandEventArgs(shellChangeScriptCmd.HeadLabel, shellChangeScriptCmd.EyeLabel, shellChangeScriptCmd.FaceLabel));
                             break;
                         }

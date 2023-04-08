@@ -1,6 +1,7 @@
 ﻿using GhostInTheShell.Modules.Balloon.ViewModels;
 using GhostInTheShell.Modules.Balloon.Views;
 using GhostInTheShell.Modules.InfraStructure;
+using Microsoft.Extensions.Logging;
 using Prism.Events;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -23,15 +24,27 @@ namespace GhostInTheShell.Modules.Balloon
             regionMgr.RegisterViewWithRegion<BalloonContentView>(WellknownRegionNames.BalloonContentViewRegion);
 
             var dialogSvc = containerProvider.Resolve<IDialogService>();
-            dialogSvc.Show(nameof(BalloonView),null, null, nameof(BalloonWindow));
+            prepareBalloon(ShellNames.Fumino, dialogSvc);
+            prepareBalloon(ShellNames.Kaori, dialogSvc);
         }
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
             containerRegistry.RegisterSingleton<IBalloonService, BalloonService>();
 
-            containerRegistry.RegisterDialog<BalloonView, BalloonViewModel>(nameof(BalloonView));
+            containerRegistry.RegisterDialog<BalloonView, BalloonViewModel>(ShellNames.Fumino + nameof(BalloonView));
+            containerRegistry.RegisterDialog<BalloonView, BalloonViewModel>(ShellNames.Kaori + nameof(BalloonView));
             containerRegistry.RegisterDialogWindow<BalloonWindow>(nameof(BalloonWindow));
+        }
+
+        private void prepareBalloon(string balloonName, IDialogService dialogSvc)
+        {
+            DialogParameters dialParams = new DialogParameters
+            {
+                { nameof(BalloonViewModel.Identifier), balloonName }
+            };
+
+            dialogSvc.Show(balloonName + nameof(BalloonView), dialParams, null, nameof(BalloonWindow));
         }
     }
 }

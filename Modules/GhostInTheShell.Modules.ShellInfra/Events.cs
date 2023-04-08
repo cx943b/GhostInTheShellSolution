@@ -20,10 +20,14 @@ namespace GhostInTheShell.Modules.ShellInfra
     }
     public class ShellPositionChangedEventArgs : ShellEventArgs
     {
-        public Point CurrentPosition { get; set; }
-        public Point ChangedLength { get; set; }
+        public Point CurrentPosition { get; init; }
+        public Point ChangedLength { get; init; }
 
-        public ShellPositionChangedEventArgs(string shellName) : base(shellName) { }
+        public ShellPositionChangedEventArgs(string shellName, Point currentPosition, Point changedLength) : base(shellName)
+        {
+            CurrentPosition = currentPosition;
+            ChangedLength = changedLength;
+        }
     }
     public class MaterialCollectionChangedEventArgs : ShellEventArgs
     {
@@ -34,18 +38,18 @@ namespace GhostInTheShell.Modules.ShellInfra
             Stream = stream ?? throw new ArgumentNullException(nameof(stream));
         }
     }
-
-
-    public class ShellPositionChangedEvent : PubSubEvent<ShellPositionChangedEventArgs>
+    public class ShellSizeChangedEventArgs : ShellEventArgs
     {
+        public Size Size { get; init; }
 
+        public ShellSizeChangedEventArgs(string shellName, Size size) : base(shellName)
+        {
+            Size = size;
+        }
     }
-    public class ShellSizeChangedEvent : PubSubEvent<Size?>
-    {
 
-    }
-    public class MaterialCollectionChangedEvent : PubSubEvent<MaterialCollectionChangedEventArgs>
-    {
 
-    }
+    public class ShellPositionChangedEvent : PubSubEvent<ShellPositionChangedEventArgs> { }
+    public class ShellSizeChangedEvent : PubSubEvent<ShellSizeChangedEventArgs> { }
+    public class MaterialCollectionChangedEvent : PubSubEvent<MaterialCollectionChangedEventArgs> { }
 }
