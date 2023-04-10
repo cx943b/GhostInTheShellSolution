@@ -17,17 +17,15 @@ using System.ComponentModel;
 using GhostInTheShell.Modules.Script;
 using Microsoft.Extensions.Logging;
 using GhostInTheShell.Modules.Shell.Client;
+using Microsoft.Extensions.Configuration;
+using GhostInTheShell.Modules.MvvmInfra;
 
 namespace GhostInTheShell.Modules.Shell
 {
     public sealed class ShellModule : IModule
     {
-        const string ShellName = ShellNames.Kaori;
-
+        const string ShellNamesSectionName = "Shell:Names";
         readonly ILogger _logger;
-
-        IShellService? _charClientSvc;
-        MaterialCollectionChangedEvent? _matCollChangedEvent;
 
         public ShellModule(ILogger<ShellModule> logger)
         {
@@ -36,26 +34,64 @@ namespace GhostInTheShell.Modules.Shell
 
         public async void OnInitialized(IContainerProvider containerProvider)
         {
-            _charClientSvc = containerProvider.Resolve<IShellService>();
-            if(_charClientSvc is null)
+            var config = containerProvider.Resolve<IConfiguration>();
+            var sShellNames = config[ShellNamesSectionName];
+
+            if(String.IsNullOrEmpty(sShellNames))
             {
-                _logger.Log(LogLevel.Error, $"NullRef: {nameof(_charClientSvc)}");
+                _logger.Log(LogLevel.Error, $"NotFound: {nameof(ShellNamesSectionName)}");
                 return;
             }
 
-            var shellSize = await _charClientSvc.RequestShellSizeAsync(ShellName);
+            string[] shellNames = sShellNames.Split('&', StringSplitOptions.RemoveEmptyEntries);
+            if (sShellNames.Length == 0)
+            {
+                _logger.Log(LogLevel.Error, $"EmptyArray: {nameof(shellNames)}");
+                return;
+            }
+
+            var shellSvc = containerProvider.Resolve<IShellService>();
+            if(shellSvc is null)
+            {
+                _logger.Log(LogLevel.Error, $"NullRef: {nameof(shellSvc)}");
+                return;
+            }
+
+            var eventAggr = containerProvider.Resolve<IEventAggregator>();
+            var dialogSvc = containerProvider.Resolve<IDialogService>();
+            var matCollChangedEvent = eventAggr.GetEvent<MaterialCollectionChangedEvent>();
+
+            foreach (string shellName in shellNames)
+                await prepareShell(shellName, shellSvc, matCollChangedEvent, eventAggr, dialogSvc);
+        }
+
+        public void RegisterTypes(IContainerRegistry containerRegistry)
+        {
+            containerRegistry.RegisterSingleton<IShellService, ShellService>();
+            
+            containerRegistry.RegisterDialog<ShellView, ShellViewModel>(ShellNames.Kaori + nameof(ShellView));
+            containerRegistry.RegisterDialog<ShellView, ShellViewModel>(ShellNames.Fumino + nameof(ShellView));
+            containerRegistry.RegisterDialogWindow<ShellWindow>(nameof(ShellWindow));
+        }
+
+        private async Task prepareShell(string shellName, IShellService shellSvc, MaterialCollectionChangedEvent matCollChangedEvent, IEventAggregator eventAggr, IDialogService dialogSvc)
+        {
+            var shellSize = await shellSvc.RequestShellSizeAsync(shellName);
             if (shellSize == System.Drawing.Size.Empty)
             {
-                _logger.Log(LogLevel.Error, $"InvalidRes: {nameof(shellSize)}");
+                _logger.Log(LogLevel.Error, "InvalidRes: ShellSize");
                 return;
             }
 
-            Task<byte[]?> reqImageTask = _charClientSvc.RequestShellImageAsync(ShellName, "부끄럼0", "중간-무광", "미소");
-            var eventAggr = containerProvider.Resolve<IEventAggregator>();
-            _matCollChangedEvent = eventAggr.GetEvent<MaterialCollectionChangedEvent>();
+            Task<byte[]?> reqImageTask = shellSvc.RequestShellImageAsync(shellName, "부끄럼0", "중간-무광", "미소");
 
-            var dialogSvc = containerProvider.Resolve<IDialogService>();
-            dialogSvc.Show(nameof(ShellView), new DialogParameters { { nameof(ShellViewModel.ImageSize), shellSize } }, null, nameof(ShellWindow));
+            DialogParameters dialParams = new DialogParameters
+            {
+                { nameof(ShellViewModel.ImageSize), shellSize },
+                { nameof(ShellViewModel.Identifier), shellName }
+            };
+
+            dialogSvc.Show(shellName + nameof(ShellView), dialParams, null, nameof(ShellWindow));
 
             var imgBytes = await reqImageTask.WaitAsync(TimeSpan.FromMilliseconds(10000));
             if (imgBytes is null)
@@ -63,29 +99,8 @@ namespace GhostInTheShell.Modules.Shell
                 _logger.Log(LogLevel.Error, $"NullRef: {nameof(imgBytes)}");
                 return;
             }
-            
-            _matCollChangedEvent.Publish(new System.IO.MemoryStream(imgBytes));
-        }
 
-        public void RegisterTypes(IContainerRegistry containerRegistry)
-        {
-            containerRegistry.RegisterSingleton<IShellService, ShellService>();
-            
-            containerRegistry.RegisterDialog<ShellView, ShellViewModel>(nameof(ShellView));
-            containerRegistry.RegisterDialogWindow<ShellWindow>(nameof(ShellWindow));
-        }
-
-        private async void onShellChangeExecute(ShellChangeScriptCommandEventArgs e)
-        {
-            var imgBytes = await _charClientSvc!.RequestShellImageAsync(ShellName, e.HeadLabel, e.EyeLabel, e.FaceLabel);
-
-            if (imgBytes is null)
-            {
-                _logger.Log(LogLevel.Error, $"NullRef: {nameof(imgBytes)}"); ;
-                return;
-            }
-
-            _matCollChangedEvent!.Publish(new System.IO.MemoryStream(imgBytes));
+            matCollChangedEvent.Publish(new MaterialCollectionChangedEventArgs(shellName, new System.IO.MemoryStream(imgBytes)));
         }
     }
 }

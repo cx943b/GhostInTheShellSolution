@@ -25,8 +25,8 @@ namespace GhostInTheShell.Modules.ShellInfra
         readonly IShellModelFactory _modelFac;
         readonly IShellMaterialFactory _matFac;
 
-        readonly MaterialCollectionChangedEvent _matCollChangedEvent;
-        readonly ShellSizeChangedEvent _shellSizeChangedEvent;
+        //readonly MaterialCollectionChangedEvent _matCollChangedEvent;
+        //readonly ShellSizeChangedEvent _shellSizeChangedEvent;
 
         readonly Random _rand = new Random();
         
@@ -39,7 +39,7 @@ namespace GhostInTheShell.Modules.ShellInfra
         public string? ShellName { get; private set; }
         public Size ShellSize { get; private set; }
 
-        public CharacterServiceBase(ILogger logger, IEventAggregator eventAggregator, IConfiguration config, IShellModelFactory modelFac, IShellMaterialFactory matFac)
+        public CharacterServiceBase(ILogger logger, IConfiguration config, IShellModelFactory modelFac, IShellMaterialFactory matFac)
         {
             _logger = logger;
             _Config = config;
@@ -47,8 +47,8 @@ namespace GhostInTheShell.Modules.ShellInfra
             _modelFac = modelFac;
             _matFac = matFac;
 
-            _matCollChangedEvent = eventAggregator.GetEvent<MaterialCollectionChangedEvent>();
-            _shellSizeChangedEvent = eventAggregator.GetEvent<ShellSizeChangedEvent>();
+            //_matCollChangedEvent = eventAggregator.GetEvent<MaterialCollectionChangedEvent>();
+            //_shellSizeChangedEvent = eventAggregator.GetEvent<ShellSizeChangedEvent>();
         }
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace GhostInTheShell.Modules.ShellInfra
 
                 await Task.WhenAll(new Task[] { taskChangeParts, taskAddAccessories });
 
-                OnMaterialCollectionChanged();
+                //OnMaterialCollectionChanged();
             }
             catch(AggregateException aggrEx)
             {
@@ -270,15 +270,15 @@ namespace GhostInTheShell.Modules.ShellInfra
             return materialStream?.ToArray();
         }
 
-        protected virtual void OnMaterialCollectionChanged()
-        {
-            var partModelMaterials = _dicShellPartModel.Values.SelectMany(m => m.GetMaterials());
-            var accessoryModelMaterials = _dicAccessoryModels.Values.SelectMany(m => m).SelectMany(m => m.GetMaterials());
+        //protected virtual void OnMaterialCollectionChanged()
+        //{
+        //    var partModelMaterials = _dicShellPartModel.Values.SelectMany(m => m.GetMaterials());
+        //    var accessoryModelMaterials = _dicAccessoryModels.Values.SelectMany(m => m).SelectMany(m => m.GetMaterials());
 
-            MemoryStream? materialStream = _matFac.Overlap(partModelMaterials.Concat(accessoryModelMaterials).OrderBy(m => m.MainIndex).ThenBy(m => m.SubIndex), ShellSize);
-            if(materialStream is not null)
-                _matCollChangedEvent.Publish(materialStream);
-        }
+        //    MemoryStream? materialStream = _matFac.Overlap(partModelMaterials.Concat(accessoryModelMaterials).OrderBy(m => m.MainIndex).ThenBy(m => m.SubIndex), ShellSize);
+        //    if(materialStream is not null)
+        //        _matCollChangedEvent.Publish(materialStream);
+        //}
 
         protected abstract Task<Stream?> ReadTableStreamAsync(string shellName);
 
@@ -531,8 +531,8 @@ namespace GhostInTheShell.Modules.ShellInfra
         readonly ILogger _logger;
         readonly string _tableRoot;
 
-        public CharacterRemoteService(ILogger<CharacterRemoteService> logger, IEventAggregator eventAggregator, IConfiguration config, IShellModelFactory modelFac, IShellMaterialFactory matFac, HttpClient client)
-            :base(logger, eventAggregator, config, modelFac, matFac)
+        public CharacterRemoteService(ILogger<CharacterRemoteService> logger, IConfiguration config, IShellModelFactory modelFac, IShellMaterialFactory matFac, HttpClient client)
+            :base(logger, config, modelFac, matFac)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

@@ -1,5 +1,6 @@
 ﻿using GhostInTheShell.Modules.Balloon.Controls;
 using GhostInTheShell.Modules.Balloon.Models;
+using GhostInTheShell.Modules.MvvmInfra;
 using Prism.Commands;
 using Prism.Events;
 using Prism.Mvvm;
@@ -14,30 +15,13 @@ using System.Windows.Input;
 
 namespace GhostInTheShell.Modules.Balloon.ViewModels
 {
-    public sealed class FuminoBalloonViewModel : BalloonViewModel
-    {
-        public const string CharacterName = "Fumino";
-
-        public FuminoBalloonViewModel(IEventAggregator eventAggregator) : base(eventAggregator)
-        {
-
-        }
-
-    }
-
-
-
-
-    public class BalloonViewModel : BindableBase, IDialogAware, IDisposable
+    public class BalloonViewModel : GhostViewModelBase, IDialogAware, IDisposable
     {
         BalloonTailDirection _TailDirection = BalloonTailDirection.Right;
 
         double _TailPosition = 50;
-        double _Width = 400;
 
         readonly List<SubscriptionToken> _lstEventToken = new List<SubscriptionToken>();
-
-        public event Action<IDialogResult> RequestClose = null!;
 
         public BalloonTailDirection TailDirection
         {
@@ -49,33 +33,14 @@ namespace GhostInTheShell.Modules.Balloon.ViewModels
             get => _TailPosition;
             set => SetProperty(ref _TailPosition, value);
         }
-        public double Width
-        {
-            get => _Width;
-            set => SetProperty(ref _Width, value);
-        }
-
-        
-
-        public string Title => "BalloonDialog";
 
         public BalloonViewModel(IEventAggregator eventAggregator)
         {
             _lstEventToken.Add(eventAggregator.GetEvent<BalloonTailDirectionChangeEvent>().Subscribe(onBalloonTailDirectionChanged));
-        }
 
-        
-
-        public bool CanCloseDialog() => true;
-
-        public void OnDialogClosed()
-        {
-            //throw new NotImplementedException();
-        }
-
-        public void OnDialogOpened(IDialogParameters parameters)
-        {
-            //throw new NotImplementedException();
+            Width = 400;
+            Height = 250;
+              
         }
 
         public void Dispose()

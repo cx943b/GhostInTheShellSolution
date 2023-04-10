@@ -14,7 +14,6 @@ builder.Services.AddSingleton<IShellMaterialFactory, ShellMaterialLocalFactory>(
 builder.Services.AddSingleton<IFuminoCharacterLocalService, FuminoCharacterLocalService>(prov =>
 {
     ILogger<FuminoCharacterLocalService> logger = prov.GetRequiredService<ILogger<FuminoCharacterLocalService>>();
-    IEventAggregator eventAggregator = prov.GetRequiredService<IEventAggregator>();
     IConfiguration config = prov.GetRequiredService<IConfiguration>();
 
     IShellModelFactory modelFac = prov.GetRequiredService<IShellModelFactory>();
@@ -22,13 +21,12 @@ builder.Services.AddSingleton<IFuminoCharacterLocalService, FuminoCharacterLocal
 
     IShellMaterialFactory materialFac = prov.GetRequiredService<IShellMaterialFactory>();
 
-    FuminoCharacterLocalService fuminoCharSvc = new FuminoCharacterLocalService(logger, eventAggregator, config, modelFac, materialFac);
+    FuminoCharacterLocalService fuminoCharSvc = new FuminoCharacterLocalService(logger, config, modelFac, materialFac);
     return fuminoCharSvc;
 });
 builder.Services.AddSingleton<IKaoriCharacterLocalService, KaoriCharacterLocalService>(prov =>
 {
     ILogger<KaoriCharacterLocalService> logger = prov.GetRequiredService<ILogger<KaoriCharacterLocalService>>();
-    IEventAggregator eventAggregator = prov.GetRequiredService<IEventAggregator>();
     IConfiguration config = prov.GetRequiredService<IConfiguration>();
 
     IShellModelFactory modelFac = prov.GetRequiredService<IShellModelFactory>();
@@ -36,7 +34,7 @@ builder.Services.AddSingleton<IKaoriCharacterLocalService, KaoriCharacterLocalSe
 
     IShellMaterialFactory materialFac = prov.GetRequiredService<IShellMaterialFactory>();
 
-    KaoriCharacterLocalService kaoriCharSvc = new KaoriCharacterLocalService(logger, eventAggregator, config, modelFac, materialFac);
+    KaoriCharacterLocalService kaoriCharSvc = new KaoriCharacterLocalService(logger, config, modelFac, materialFac);
     return kaoriCharSvc;
 });
 

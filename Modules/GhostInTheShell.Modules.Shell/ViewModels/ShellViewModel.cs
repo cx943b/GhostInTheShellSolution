@@ -1,4 +1,5 @@
-﻿using GhostInTheShell.Modules.ShellInfra;
+﻿using GhostInTheShell.Modules.MvvmInfra;
+using GhostInTheShell.Modules.ShellInfra;
 using Prism.Events;
 using Prism.Mvvm;
 using Prism.Services.Dialogs;
@@ -13,7 +14,7 @@ using System.Windows.Media.Imaging;
 
 namespace GhostInTheShell.Modules.Shell.ViewModels
 {
-    internal class ShellViewModel : BindableBase, IDisposable, IDialogAware
+    internal class ShellViewModel : GhostViewModelBase, IDisposable
     {
         readonly MaterialCollectionChangedEvent _matCollChangedEvent;
         readonly ShellSizeChangedEvent _sizeChangedEvent;
@@ -23,10 +24,6 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
 
         BitmapImage? _ImageSource;
         Size _ImageSize;
-        double _Left = 400, _Top;
-        double _Width, _Height;
-
-        public event Action<IDialogResult> RequestClose = null!;
 
         public BitmapImage? ImageSource
         {
@@ -38,28 +35,6 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
             get => _ImageSize;
             set => SetProperty(ref _ImageSize, value);
         }
-
-        public double Left
-        {
-            get => _Left;
-            set => SetProperty(ref _Left, value);
-        }
-        public double Top
-        {
-            get => _Top;
-            set => SetProperty(ref _Top, value);
-        }
-        public double Width
-        {
-            get => _Width;
-            set => SetProperty(ref _Width, value);
-        }
-        public double Height
-        {
-            get => _Height;
-            set => SetProperty(ref _Height, value);
-        }
-        public string Title { get; set; } = "Shell";
 
         public ShellViewModel(IEventAggregator eventAggregator)
         {
@@ -76,30 +51,47 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
             _subSizeToken.Dispose();
         }
 
-        
-
-        private void onShellSizeChanged(System.Drawing.Size? shellSize)
+        protected override void OnDialogOpenedBase(IDialogParameters parameters)
         {
-            System.Drawing.Size size = shellSize.Value;
+            base.OnDialogOpenedBase(parameters);
 
+            if (parameters.TryGetValue(nameof(ShellViewModel.ImageSize), out System.Drawing.Size imgSize))
+                onShellSizeChanged(imgSize);
+        }
+
+
+
+        private void onShellSizeChanged(ShellSizeChangedEventArgs e)
+        {
+            if (!base.IsTarget(e.ShellName))
+                return;
+
+            System.Drawing.Size size = e.Size;
+            onShellSizeChanged(size);
+        }
+        private void onShellSizeChanged(System.Drawing.Size size)
+        {
             Width = size.Width;
             Height = size.Height;
             Left = SystemParameters.WorkArea.Width - size.Width;
             Top = SystemParameters.WorkArea.Height - size.Height;
 
-            ImageSize = new Size(_Width, _Height);
+            ImageSize = new Size(Width, Height);
         }
 
-        private void onMaterialCollectionChanged(MemoryStream imgStream)
+        private void onMaterialCollectionChanged(MaterialCollectionChangedEventArgs e)
         {
-            if(_ImageSource is not null)
+            if (!base.IsTarget(e.ShellName))
+                return;
+
+            if (_ImageSource is not null)
                 _ImageSource.StreamSource.Dispose();
 
-            if (imgStream is not null)
+            if (e.Stream is not null)
             {
                 BitmapImage bi = new BitmapImage();
                 bi.BeginInit();
-                bi.StreamSource = imgStream;
+                bi.StreamSource = e.Stream;
                 bi.EndInit();
 
                 if (bi.CanFreeze)
@@ -110,26 +102,6 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
             else
             {
                 ImageSource = null;
-            }
-        }
-
-        public bool CanCloseDialog() => true;
-
-        public void OnDialogClosed()
-        {
-            
-            //throw new NotImplementedException();
-        }
-
-        public void OnDialogOpened(IDialogParameters parameters)
-        {
-            if (parameters.TryGetValue(nameof(ShellViewModel.ImageSize), out System.Drawing.Size imgSize))
-            {
-                onShellSizeChanged(imgSize);
-            }
-            else
-            {
-                throw new KeyNotFoundException(nameof(ShellViewModel));
             }
         }
     }
