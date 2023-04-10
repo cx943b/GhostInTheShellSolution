@@ -1,8 +1,12 @@
 ﻿using GhostInTheShell.Modules.Balloon.ViewModels;
+using GhostInTheShell.Modules.InfraStructure;
+using GhostInTheShell.Modules.MvvmInfra;
+using Microsoft.Extensions.Configuration;
 using Prism.Regions;
 using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,10 +27,20 @@ namespace GhostInTheShell.Modules.Balloon.Views
     /// </summary>
     public partial class BalloonView : UserControl, IDialogAware
     {
-
-        public BalloonView()
+        public BalloonView(IConfiguration config)
         {
             InitializeComponent();
+
+            var vm = DataContext as IGhostIdentifier;
+            vm!.IdentifierChanged += Vm_IdentifierChanged;
+        }
+
+        private void Vm_IdentifierChanged(object sender, GhostIdentifierChangedEventArgs e)
+        {
+            ContentControl contentCtrl = new ContentControl();
+            RegionManager.SetRegionName(contentCtrl, e.Identifier + WellknownRegionNames.BalloonContentViewRegion);
+
+            ballCtrl.Content = contentCtrl;
         }
 
         public string Title => "BalloonWindow";

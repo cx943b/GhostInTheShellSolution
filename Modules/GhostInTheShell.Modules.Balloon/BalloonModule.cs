@@ -21,7 +21,7 @@ namespace GhostInTheShell.Modules.Balloon
         public void OnInitialized(IContainerProvider containerProvider)
         {
             IRegionManager regionMgr = containerProvider.Resolve<IRegionManager>();
-            regionMgr.RegisterViewWithRegion<BalloonContentView>(WellknownRegionNames.BalloonContentViewRegion);
+            //regionMgr.RegisterViewWithRegion<BalloonContentView>(WellknownRegionNames.BalloonContentViewRegion);
 
             var dialogSvc = containerProvider.Resolve<IDialogService>();
             prepareBalloon(ShellNames.Fumino, dialogSvc);

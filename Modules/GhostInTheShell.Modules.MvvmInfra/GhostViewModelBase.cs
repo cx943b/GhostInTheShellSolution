@@ -8,7 +8,21 @@ using System.Threading.Tasks;
 
 namespace GhostInTheShell.Modules.MvvmInfra
 {
-    public abstract class GhostViewModelBase : BindableBase, IDialogAware
+    public delegate void GhostIdentifierChangedEventHandler(object sender, GhostIdentifierChangedEventArgs e);
+    public class GhostIdentifierChangedEventArgs : EventArgs
+    {
+        public string Identifier { get; init; }
+        public GhostIdentifierChangedEventArgs(string identifier)
+        {
+            Identifier = identifier;
+        }
+    }
+    public interface IGhostIdentifier
+    {
+        string Identifier { get; }
+        event GhostIdentifierChangedEventHandler IdentifierChanged;
+    }
+    public abstract class GhostViewModelBase : BindableBase, IDialogAware, IGhostIdentifier
     {
         string _Identifier;
         double _Left = 400, _Top;
@@ -37,9 +51,11 @@ namespace GhostInTheShell.Modules.MvvmInfra
             set => SetProperty(ref _Height, value);
         }
 
+
         public string Title => _Identifier;
 
         public event Action<IDialogResult> RequestClose;
+        public event GhostIdentifierChangedEventHandler? IdentifierChanged;
 
         public bool CanCloseDialog() => true;
 
@@ -56,6 +72,7 @@ namespace GhostInTheShell.Modules.MvvmInfra
                 throw new KeyNotFoundException();
 
             _Identifier = parameters.GetValue<string>(nameof(GhostViewModelBase.Identifier));
+            IdentifierChanged?.Invoke(this, new GhostIdentifierChangedEventArgs(Identifier));   // ForView
         }
 
         protected bool IsTarget(string identifier)

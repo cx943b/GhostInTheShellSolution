@@ -33,6 +33,6 @@
     <localCtrl:BalloonControl x:Name="ballCtrl" Margin="20" MinWidth="300" MinHeight="200" Height="200" VerticalAlignment="Top"
                               TailPosition="{Binding TailPosition, Mode=TwoWay}"
                               TailDirection="{Binding TailDirection}">
-        <ContentControl prism:RegionManager.RegionName="{x:Static infra:WellknownRegionNames.BalloonContentViewRegion}"/>
+        <!--<ContentControl prism:RegionManager.RegionName="{x:Static infra:WellknownRegionNames.BalloonContentViewRegion}"/>-->
     </localCtrl:BalloonControl>
 </UserControl>
