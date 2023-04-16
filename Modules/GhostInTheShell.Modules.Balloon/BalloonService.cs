@@ -25,7 +25,7 @@ namespace GhostInTheShell.Modules.Balloon
         public Typeface GetTypeface() => new Typeface(FontFamily, FontStyle, FontWeight, FontStretch);
     }
         
-    public class BalloonService : IBalloonService
+    internal class BalloonService : IBalloonService
     {
         IRegionManager _regionMgr;
         BalloonItemsControlRegion _balloonContentsRegion;
@@ -33,16 +33,28 @@ namespace GhostInTheShell.Modules.Balloon
 
         readonly BalloonPositionChangeEvent _balloonPositionChangeEvent;
         readonly List<BalloonContentModelBase> _lstContent = new List<BalloonContentModelBase>();
+        readonly IDictionary<string, BalloonItemsControlRegion> _dicBalloonItemsCtrlRegion = new Dictionary<string, BalloonItemsControlRegion>();
+        readonly IEnumerable<string> _charNames;
 
-        public BalloonService(ILogger<BalloonService> logger, IEventAggregator eventAggregator, IRegionManager regionManager)
+        public BalloonService(ILogger<BalloonService> logger, IEventAggregator eventAggregator, IRegionManager regionManager, ICharacterNameService charNameSvc)
         {
             _logger = logger;
             _regionMgr = regionManager;
 
+            if(charNameSvc is null)
+                throw new ArgumentNullException(nameof(charNameSvc));
+
+            _charNames = charNameSvc.CharacterNames;
+
             _balloonPositionChangeEvent = eventAggregator.GetEvent<BalloonPositionChangeEvent>();
         }
 
-        public void AddText(string text)
+        public void InitializeRegions()
+        {
+
+        }
+
+        public void AddText(string charName, string text)
         {
             if (_balloonContentsRegion is null)
                 _balloonContentsRegion = (BalloonItemsControlRegion)_regionMgr.Regions[WellknownRegionNames.BalloonContentControlRegion];
@@ -59,7 +71,7 @@ namespace GhostInTheShell.Modules.Balloon
             _balloonContentsRegion.Add(textContent);
             _lstContent.Add(textContent);
         }
-        public void AddImage(Uri imgUri, Size imgSize)
+        public void AddImage(string charName, Uri imgUri, Size imgSize)
         {
             if (_balloonContentsRegion is null)
                 _balloonContentsRegion = (BalloonItemsControlRegion)_regionMgr.Regions[WellknownRegionNames.BalloonContentControlRegion];
@@ -78,7 +90,7 @@ namespace GhostInTheShell.Modules.Balloon
             _lstContent.Add(imgContent);
         }
 
-        public void ChangePosition(Point pos) => _balloonPositionChangeEvent.Publish(new BalloonPositionChangeEventArgs { Position = pos});
+        public void ChangePosition(string charName, Point pos) => _balloonPositionChangeEvent.Publish(new BalloonPositionChangeEventArgs(charName, pos));
         public void Clear()
         {
             _balloonContentsRegion.RemoveAll();

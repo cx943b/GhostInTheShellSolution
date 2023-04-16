@@ -10,7 +10,7 @@ using System.Windows.Media.Animation;
 
 namespace GhostInTheShell.Modules.Balloon.Controls
 {
-    public class BalloonControl : ContentControl
+    internal class BalloonControl : ContentControl
     {
         const string TailBaseName = "PART_Tail";
 

@@ -10,7 +10,7 @@ using System.Windows.Controls;
 namespace GhostInTheShell.Modules.Balloon.Controls
 {
 
-    public class BalloonContentPresenter : ContentPresenter
+    internal class BalloonContentPresenter : ContentPresenter
     {
         protected override Size MeasureOverride(Size constraint)
         {
@@ -20,7 +20,7 @@ namespace GhostInTheShell.Modules.Balloon.Controls
             return base.MeasureOverride(new Size(constraint.Width, Double.PositiveInfinity));
         }
     }
-    public class BalloonItemsControl : ItemsControl
+    internal class BalloonItemsControl : ItemsControl
     {
         protected override Size MeasureOverride(Size constraint)
         {

@@ -43,6 +43,7 @@ namespace GhostInTheShell
         {
             base.ConfigureModuleCatalog(moduleCatalog);
 
+            moduleCatalog.AddModule<InfraModule>();
             moduleCatalog.AddModule<ScriptModule>();
             moduleCatalog.AddModule<MvvmInfraModule>();
             moduleCatalog.AddModule<ShellModule>();

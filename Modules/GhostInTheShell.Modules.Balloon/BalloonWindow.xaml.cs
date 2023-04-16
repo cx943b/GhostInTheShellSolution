@@ -18,7 +18,7 @@ using System.Windows.Shapes;
 
 namespace GhostInTheShell.Modules.Balloon
 {
-    public partial class BalloonWindow : GhostDialogWindow, IDialogWindow
+    internal partial class BalloonWindow : GhostDialogWindow, IDialogWindow
     {
         public BalloonWindow()
         {

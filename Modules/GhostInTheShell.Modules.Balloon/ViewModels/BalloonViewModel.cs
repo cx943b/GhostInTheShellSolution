@@ -15,7 +15,7 @@ using System.Windows.Input;
 
 namespace GhostInTheShell.Modules.Balloon.ViewModels
 {
-    public class BalloonViewModel : GhostViewModelBase, IDialogAware, IDisposable
+    internal class BalloonViewModel : GhostViewModelBase, IDialogAware, IDisposable
     {
         BalloonTailDirection _TailDirection = BalloonTailDirection.Right;
 
@@ -40,7 +40,6 @@ namespace GhostInTheShell.Modules.Balloon.ViewModels
 
             Width = 400;
             Height = 250;
-              
         }
 
         public void Dispose()
@@ -49,12 +48,9 @@ namespace GhostInTheShell.Modules.Balloon.ViewModels
             _lstEventToken.Clear();
         }
 
-        private void onBalloonTailDirectionChanged(BalloonTailDirection? tailDirection)
+        private void onBalloonTailDirectionChanged(BalloonTailDirectionChangeEventArgs e)
         {
-            if (!tailDirection.HasValue)
-                throw new ArgumentNullException(nameof(TailDirection));
-
-            TailDirection = tailDirection.Value;
+            TailDirection = e.TailDirection;
         }
     }
 }

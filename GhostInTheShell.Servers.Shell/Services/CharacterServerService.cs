@@ -20,8 +20,8 @@ namespace GhostInTheShell.Servers.Shell.Services
             if (kaoriCharLocalSvc is null)
                 throw new ArgumentNullException(nameof(kaoriCharLocalSvc));
 
-            _dicCharLocalSvc.Add(ShellNames.Fumino, fuminoCharLocalSvc);
-            _dicCharLocalSvc.Add(ShellNames.Kaori, kaoriCharLocalSvc);
+            _dicCharLocalSvc.Add(CharacterNames.Fumino, fuminoCharLocalSvc);
+            _dicCharLocalSvc.Add(CharacterNames.Kaori, kaoriCharLocalSvc);
         }
 
         public override Task<CharacterSizeResponse> GetCharacterSize(CharacterSizeRequest request, ServerCallContext context)

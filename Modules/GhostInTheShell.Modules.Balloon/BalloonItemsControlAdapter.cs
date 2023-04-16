@@ -20,87 +20,87 @@ namespace GhostInTheShell.Modules.Balloon
     }
 
 
-    public class BalloonItemsControlAdapter : RegionAdapterBase<BalloonItemsControl>
-    {
-        BalloonItemsControl? _regionTarget;
+    //public class BalloonItemsControlAdapter : RegionAdapterBase<BalloonItemsControl>
+    //{
+    //    BalloonItemsControl? _regionTarget;
 
-        public BalloonItemsControlAdapter(IRegionBehaviorFactory regionBehaviorFactory) : base(regionBehaviorFactory)
-        {
-        }
+    //    public BalloonItemsControlAdapter(IRegionBehaviorFactory regionBehaviorFactory) : base(regionBehaviorFactory)
+    //    {
+    //    }
 
-        protected override void Adapt(IRegion region, BalloonItemsControl regionTarget)
-        {
-            _regionTarget = regionTarget;
-            _regionTarget.SizeChanged += (s, e) => ((BalloonItemsControlRegion)region).Size = e.NewSize;
-            region.Views.CollectionChanged += onRegionCollectionChanged;
-        }
-
-
-        protected override IRegion CreateRegion() => new BalloonItemsControlRegion();
-
-        private void onRegionCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            Size regionTargetSize = _regionTarget!.DesiredSize;
-            var viewColl = (ViewsCollection)sender!;
-
-            int contentCount = viewColl.Count();
-            //var befLastContent = viewColl.ElementAt(contentCount - 2);
+    //    protected override void Adapt(IRegion region, BalloonItemsControl regionTarget)
+    //    {
+    //        _regionTarget = regionTarget;
+    //        _regionTarget.SizeChanged += (s, e) => ((BalloonItemsControlRegion)region).Size = e.NewSize;
+    //        region.Views.CollectionChanged += onRegionCollectionChanged;
+    //    }
 
 
-            if (e.Action== NotifyCollectionChangedAction.Add)
-            {
-                BalloonContentControlBase? contentCtrl = null;
-                foreach(var newItem in e.NewItems)
-                {
-                    contentCtrl = null;
+    //    protected override IRegion CreateRegion() => new BalloonItemsControlRegion();
 
-                    switch (newItem)
-                    {
-                        case BalloonTextConetntModel txtContent:
-                            {
-                                contentCtrl = new BalloonTextContentControl();
-                                break;
-                            }
-                        case BalloonImageContentModel imgContent:
-                            {
-                                contentCtrl = new BalloonImageContentControl();
-                                break;
-                            }
-                    }
+    //    private void onRegionCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    //    {
+    //        Size regionTargetSize = _regionTarget!.DesiredSize;
+    //        var viewColl = (ViewsCollection)sender!;
 
-                    if(contentCtrl is null)
-                    {
-                        throw new InvalidCastException("NotBalloonContentDataContext");
-                    }
+    //        int contentCount = viewColl.Count();
+    //        //var befLastContent = viewColl.ElementAt(contentCount - 2);
 
-                    contentCtrl.DataContext = newItem;
 
-                    Console.WriteLine($"BefAddHeight: {_regionTarget.ActualHeight}");
+    //        if (e.Action== NotifyCollectionChangedAction.Add)
+    //        {
+    //            BalloonContentControlBase? contentCtrl = null;
+    //            foreach(var newItem in e.NewItems)
+    //            {
+    //                contentCtrl = null;
 
-                    _regionTarget!.Items.Add(contentCtrl);
+    //                switch (newItem)
+    //                {
+    //                    case BalloonTextConetntModel txtContent:
+    //                        {
+    //                            contentCtrl = new BalloonTextContentControl();
+    //                            break;
+    //                        }
+    //                    case BalloonImageContentModel imgContent:
+    //                        {
+    //                            contentCtrl = new BalloonImageContentControl();
+    //                            break;
+    //                        }
+    //                }
 
-                    Console.WriteLine($"BefAddHeight: {_regionTarget.ActualHeight}");
+    //                if(contentCtrl is null)
+    //                {
+    //                    throw new InvalidCastException("NotBalloonContentDataContext");
+    //                }
 
-                }
-            }
-            else if(e.Action == NotifyCollectionChangedAction.Remove)
-            {
-                foreach (var oldItem in e.OldItems)
-                {
-                    foreach(FrameworkElement child in _regionTarget.Items)
-                    {
-                        if(child.DataContext == oldItem)
-                        {
-                            _regionTarget.Items.Remove(child);
-                            break;
-                        }
-                    }
-                }
-            }
-            //else if (e.Action == NotifyCollectionChangedAction.Reset)
-            //{
-            //    _regionTarget.Items.Clear();
-            //}
-        }
-    }
+    //                contentCtrl.DataContext = newItem;
+
+    //                Console.WriteLine($"BefAddHeight: {_regionTarget.ActualHeight}");
+
+    //                _regionTarget!.Items.Add(contentCtrl);
+
+    //                Console.WriteLine($"BefAddHeight: {_regionTarget.ActualHeight}");
+
+    //            }
+    //        }
+    //        else if(e.Action == NotifyCollectionChangedAction.Remove)
+    //        {
+    //            foreach (var oldItem in e.OldItems)
+    //            {
+    //                foreach(FrameworkElement child in _regionTarget.Items)
+    //                {
+    //                    if(child.DataContext == oldItem)
+    //                    {
+    //                        _regionTarget.Items.Remove(child);
+    //                        break;
+    //                    }
+    //                }
+    //            }
+    //        }
+    //        //else if (e.Action == NotifyCollectionChangedAction.Reset)
+    //        //{
+    //        //    _regionTarget.Items.Clear();
+    //        //}
+    //    }
+    //}
 }

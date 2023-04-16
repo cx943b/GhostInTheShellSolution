@@ -5,9 +5,9 @@ namespace GhostInTheShell.Modules.Balloon
 {
     public interface IBalloonService
     {
-        void AddImage(Uri imgUri, Size imgSize);
-        void AddText(string text);
-        void ChangePosition(Point pos);
+        void AddImage(string charName, Uri imgUri, Size imgSize);
+        void AddText(string charName, string text);
+        void ChangePosition(string charName, Point pos);
         void Clear();
     }
 }

@@ -184,7 +184,7 @@ namespace GhostInTheShell.Modules.Script
                                     string[] charParams = paramStr.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                                     if(charParams.Length == 3)
                                     {
-                                        byte[]? imgBytes = await _charClientSvc.RequestShellImageAsync(ShellNames.Kaori, charParams[0], charParams[1], charParams[2]);
+                                        byte[]? imgBytes = await _charClientSvc.RequestShellImageAsync(CharacterNames.Kaori, charParams[0], charParams[1], charParams[2]);
                                         if(imgBytes is null)
                                         {
                                             throw new ArgumentException($"ScriptError-InvalidResponses: {ScriptCommandChar.ChangeShell}");

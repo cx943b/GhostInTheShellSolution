@@ -11,7 +11,7 @@ using System.Windows.Media;
 
 namespace GhostInTheShell.Modules.Balloon.Controls
 {
-    public interface IBalloonContent
+    internal interface IBalloonContent
     {
         public Point Position { get; set; }
         public Size Size { get; set; }

@@ -17,7 +17,7 @@ builder.Services.AddSingleton<IFuminoCharacterLocalService, FuminoCharacterLocal
     IConfiguration config = prov.GetRequiredService<IConfiguration>();
 
     IShellModelFactory modelFac = prov.GetRequiredService<IShellModelFactory>();
-    modelFac.InitializeAsync(ShellNames.Fumino).Await();
+    modelFac.InitializeAsync(CharacterNames.Fumino).Await();
 
     IShellMaterialFactory materialFac = prov.GetRequiredService<IShellMaterialFactory>();
 
@@ -30,7 +30,7 @@ builder.Services.AddSingleton<IKaoriCharacterLocalService, KaoriCharacterLocalSe
     IConfiguration config = prov.GetRequiredService<IConfiguration>();
 
     IShellModelFactory modelFac = prov.GetRequiredService<IShellModelFactory>();
-    modelFac.InitializeAsync(ShellNames.Kaori).Await();
+    modelFac.InitializeAsync(CharacterNames.Kaori).Await();
 
     IShellMaterialFactory materialFac = prov.GetRequiredService<IShellMaterialFactory>();
 

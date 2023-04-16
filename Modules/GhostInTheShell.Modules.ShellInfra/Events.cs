@@ -1,4 +1,5 @@
-﻿using Prism.Events;
+﻿using GhostInTheShell.Modules.InfraStructure;
+using Prism.Events;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -9,16 +10,7 @@ using System.Threading.Tasks;
 
 namespace GhostInTheShell.Modules.ShellInfra
 {
-    public abstract class ShellEventArgs : EventArgs
-    {
-        public string ShellName { get; init; }
-
-        public ShellEventArgs(string shellName)
-        {
-            ShellName = shellName ?? throw new ArgumentNullException(nameof(shellName));
-        }
-    }
-    public class ShellPositionChangedEventArgs : ShellEventArgs
+    public class ShellPositionChangedEventArgs : GhostEventBase
     {
         public Point CurrentPosition { get; init; }
         public Point ChangedLength { get; init; }
@@ -29,7 +21,7 @@ namespace GhostInTheShell.Modules.ShellInfra
             ChangedLength = changedLength;
         }
     }
-    public class MaterialCollectionChangedEventArgs : ShellEventArgs
+    public class MaterialCollectionChangedEventArgs : GhostEventBase
     {
         public MemoryStream Stream { get; init; }
 
@@ -38,7 +30,7 @@ namespace GhostInTheShell.Modules.ShellInfra
             Stream = stream ?? throw new ArgumentNullException(nameof(stream));
         }
     }
-    public class ShellSizeChangedEventArgs : ShellEventArgs
+    public class ShellSizeChangedEventArgs : GhostEventBase
     {
         public Size Size { get; init; }
 

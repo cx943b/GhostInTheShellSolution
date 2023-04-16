@@ -8,7 +8,7 @@ using System.Windows;
 
 namespace GhostInTheShell.Modules.Balloon.ViewModels
 {
-    public class BalloonItemViewModel : BindableBase
+    internal class BalloonItemViewModel : BindableBase
     {
         Point _Position;
         Size _Size;

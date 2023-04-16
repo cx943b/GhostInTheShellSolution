@@ -22,7 +22,7 @@ namespace GhostInTheShell.Servers.Shell.Services
         {
         }
 
-        public Task<bool> InitializeAsync() => base.InitializeAsync(ShellNames.Fumino);
+        public Task<bool> InitializeAsync() => base.InitializeAsync(CharacterNames.Fumino);
     }
     public class KaoriCharacterLocalService: CharacterLocalService, IKaoriCharacterLocalService
     {
@@ -31,7 +31,7 @@ namespace GhostInTheShell.Servers.Shell.Services
         {
         }
 
-        public Task<bool> InitializeAsync() => base.InitializeAsync(ShellNames.Kaori);
+        public Task<bool> InitializeAsync() => base.InitializeAsync(CharacterNames.Kaori);
     }
 
 

@@ -18,22 +18,42 @@ namespace GhostInTheShell.Modules.Balloon
 {
     public class BalloonModule : IModule
     {
+        readonly ILogger _logger;
+
+        public BalloonModule(ILogger<BalloonModule> logger)
+        {
+            _logger = logger;
+        }
+
         public void OnInitialized(IContainerProvider containerProvider)
         {
-            IRegionManager regionMgr = containerProvider.Resolve<IRegionManager>();
-            //regionMgr.RegisterViewWithRegion<BalloonContentView>(WellknownRegionNames.BalloonContentViewRegion);
+            var charNameSvc = containerProvider.Resolve<ICharacterNameService>();
+            if(charNameSvc is null)
+            {
+                _logger.Log(LogLevel.Error, $"NullRef: {nameof(charNameSvc)}");
+                return;
+            }
 
-            var dialogSvc = containerProvider.Resolve<IDialogService>();
-            prepareBalloon(ShellNames.Fumino, dialogSvc);
-            prepareBalloon(ShellNames.Kaori, dialogSvc);
+            IEnumerable<string> charNames = charNameSvc.CharacterNames;
+            if(charNames.Any())
+            {
+                var dialogSvc = containerProvider.Resolve<IDialogService>();
+
+                foreach(var charName in charNames)
+                    prepareBalloon(charName, dialogSvc);
+            }
+            else
+            {
+                _logger.Log(LogLevel.Warning, $"EmptyArray: {nameof(charNames)}");
+            }
         }
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
             containerRegistry.RegisterSingleton<IBalloonService, BalloonService>();
 
-            containerRegistry.RegisterDialog<BalloonView, BalloonViewModel>(ShellNames.Fumino + nameof(BalloonView));
-            containerRegistry.RegisterDialog<BalloonView, BalloonViewModel>(ShellNames.Kaori + nameof(BalloonView));
+            containerRegistry.RegisterDialog<BalloonView, BalloonViewModel>(CharacterNames.Fumino + nameof(BalloonView));
+            containerRegistry.RegisterDialog<BalloonView, BalloonViewModel>(CharacterNames.Kaori + nameof(BalloonView));
             containerRegistry.RegisterDialogWindow<BalloonWindow>(nameof(BalloonWindow));
         }
 

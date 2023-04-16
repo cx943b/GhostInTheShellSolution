@@ -24,7 +24,6 @@ namespace GhostInTheShell.Modules.Shell
 {
     public sealed class ShellModule : IModule
     {
-        const string ShellNamesSectionName = "Shell:Names";
         readonly ILogger _logger;
 
         public ShellModule(ILogger<ShellModule> logger)
@@ -34,43 +33,38 @@ namespace GhostInTheShell.Modules.Shell
 
         public async void OnInitialized(IContainerProvider containerProvider)
         {
-            var config = containerProvider.Resolve<IConfiguration>();
-            var sShellNames = config[ShellNamesSectionName];
-
-            if(String.IsNullOrEmpty(sShellNames))
-            {
-                _logger.Log(LogLevel.Error, $"NotFound: {nameof(ShellNamesSectionName)}");
-                return;
-            }
-
-            string[] shellNames = sShellNames.Split('&', StringSplitOptions.RemoveEmptyEntries);
-            if (sShellNames.Length == 0)
-            {
-                _logger.Log(LogLevel.Error, $"EmptyArray: {nameof(shellNames)}");
-                return;
-            }
-
             var shellSvc = containerProvider.Resolve<IShellService>();
-            if(shellSvc is null)
+            if (shellSvc is null)
             {
                 _logger.Log(LogLevel.Error, $"NullRef: {nameof(shellSvc)}");
                 return;
             }
+            var charNameSvc = containerProvider.Resolve<ICharacterNameService>();
+            if (charNameSvc is null)
+                throw new NullReferenceException(nameof(charNameSvc));
 
             var eventAggr = containerProvider.Resolve<IEventAggregator>();
             var dialogSvc = containerProvider.Resolve<IDialogService>();
             var matCollChangedEvent = eventAggr.GetEvent<MaterialCollectionChangedEvent>();
 
-            foreach (string shellName in shellNames)
-                await prepareShell(shellName, shellSvc, matCollChangedEvent, eventAggr, dialogSvc);
+            IEnumerable<string> charNames = charNameSvc.CharacterNames;
+            if (charNames.Any())
+            {
+                foreach (var charName in charNames)
+                    await prepareShell(charName, shellSvc, matCollChangedEvent, eventAggr, dialogSvc);
+            }
+            else
+            {
+                _logger.Log(LogLevel.Warning, $"EmptyArray: {nameof(charNames)}");
+            }
         }
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
             containerRegistry.RegisterSingleton<IShellService, ShellService>();
             
-            containerRegistry.RegisterDialog<ShellView, ShellViewModel>(ShellNames.Kaori + nameof(ShellView));
-            containerRegistry.RegisterDialog<ShellView, ShellViewModel>(ShellNames.Fumino + nameof(ShellView));
+            containerRegistry.RegisterDialog<ShellView, ShellViewModel>(CharacterNames.Kaori + nameof(ShellView));
+            containerRegistry.RegisterDialog<ShellView, ShellViewModel>(CharacterNames.Fumino + nameof(ShellView));
             containerRegistry.RegisterDialogWindow<ShellWindow>(nameof(ShellWindow));
         }
 
@@ -83,7 +77,7 @@ namespace GhostInTheShell.Modules.Shell
                 return;
             }
 
-            Task<byte[]?> reqImageTask = shellSvc.RequestShellImageAsync(shellName, "부끄럼0", "중간-무광", "미소");
+            Task<byte[]?> reqImageTask = shellSvc.RequestShellImageAsync(shellName, "부끄럼0", "중간-무광", "웃음");
 
             DialogParameters dialParams = new DialogParameters
             {

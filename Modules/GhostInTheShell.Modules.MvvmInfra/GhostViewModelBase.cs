@@ -1,4 +1,5 @@
-﻿using Prism.Mvvm;
+﻿using GhostInTheShell.Modules.InfraStructure;
+using Prism.Mvvm;
 using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
@@ -8,15 +9,6 @@ using System.Threading.Tasks;
 
 namespace GhostInTheShell.Modules.MvvmInfra
 {
-    public delegate void GhostIdentifierChangedEventHandler(object sender, GhostIdentifierChangedEventArgs e);
-    public class GhostIdentifierChangedEventArgs : EventArgs
-    {
-        public string Identifier { get; init; }
-        public GhostIdentifierChangedEventArgs(string identifier)
-        {
-            Identifier = identifier;
-        }
-    }
     public interface IGhostIdentifier
     {
         string Identifier { get; }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GhostInTheShell.Modules.InfraStructure
 {
-    public class ShellNames
+    public class CharacterNames
     {
         public const string Fumino = "Fumino";
         public const string Kaori = "Kaori";

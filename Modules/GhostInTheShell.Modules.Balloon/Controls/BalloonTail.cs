@@ -10,7 +10,7 @@ using System.Windows.Shapes;
 
 namespace GhostInTheShell.Modules.Balloon.Controls
 {
-    public class BalloonTail : Control
+    internal class BalloonTail : Control
     {
         public const string PanelName = "PART_Canvas";
         public const string TailPathName = "PART_TailPath";
