@@ -8,6 +8,6 @@ namespace GhostInTheShell.Modules.Balloon
         void AddImage(string charName, Uri imgUri, Size imgSize);
         void AddText(string charName, string text);
         void ChangePosition(string charName, Point pos);
-        void Clear();
+        void Clear(string charName);
     }
 }

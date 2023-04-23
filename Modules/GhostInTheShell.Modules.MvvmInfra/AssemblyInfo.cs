@@ -1,4 +1,9 @@
+using System.Runtime.CompilerServices;
 using System.Windows;
+
+
+[assembly: InternalsVisibleTo("GhostInTheShell.Modules.Balloon")]
+[assembly: InternalsVisibleTo("GhostInTheShell.Modules.Shell")]
 
 [assembly: ThemeInfo(
     ResourceDictionaryLocation.None, //where theme specific resource dictionaries are located

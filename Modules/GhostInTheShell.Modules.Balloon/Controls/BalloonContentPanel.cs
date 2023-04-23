@@ -21,9 +21,9 @@ namespace GhostInTheShell.Modules.Balloon.Controls
             Point currentPos = new Point();
             Rect childRect;
 
-            foreach (UIElement child in Children)
+            foreach (ContentPresenter child in Children.Cast<ContentPresenter>())
             {
-                if (child is BalloonTextContentControl)
+                if (child.Content is BalloonTextContentControl)
                 {
                     if (currentPos.X + child.DesiredSize.Width > finalSize.Width)
                     {
@@ -37,7 +37,7 @@ namespace GhostInTheShell.Modules.Balloon.Controls
                     currentPos.X += child.DesiredSize.Width;
                     lineMaxHeight = Math.Max(lineMaxHeight, child.DesiredSize.Height);
                 }
-                else if (child is BalloonImageContentControl)
+                else if (child.Content is BalloonImageContentControl)
                 {
                     currentPos.X = 0;
                     currentPos.Y += lineMaxHeight + ImageContentVerticalMargin;
@@ -61,11 +61,11 @@ namespace GhostInTheShell.Modules.Balloon.Controls
             double lineMaxHeight = 0;
             Point currentPos = new Point();
 
-            foreach (UIElement child in Children)
+            foreach (ContentPresenter child in Children.Cast<ContentPresenter>())
             {
                 child.Measure(availableSize);
 
-                if (child is BalloonTextContentControl)
+                if (child.Content is BalloonTextContentControl)
                 {
                     if (currentPos.X + child.DesiredSize.Width > availableSize.Width)
                     {
@@ -76,7 +76,7 @@ namespace GhostInTheShell.Modules.Balloon.Controls
                     currentPos.X += child.DesiredSize.Width;
                     lineMaxHeight = Math.Max(lineMaxHeight, child.DesiredSize.Height);
                 }
-                else if (child is BalloonImageContentControl)
+                else if (child.Content is BalloonImageContentControl)
                 {
                     currentPos.X = 0;
                     currentPos.Y += lineMaxHeight + ImageContentVerticalMargin;

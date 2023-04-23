@@ -67,12 +67,13 @@ namespace GhostInTheShell.Modules.MvvmInfra
             IdentifierChanged?.Invoke(this, new GhostIdentifierChangedEventArgs(Identifier));   // ForView
         }
 
-        protected bool IsTarget(string identifier)
+        protected virtual bool IsTarget(string identifier)
         {
             if(String.IsNullOrEmpty(identifier))
                 throw new ArgumentNullException(nameof(identifier));
 
-            return String.Equals(identifier, _Identifier, StringComparison.OrdinalIgnoreCase);
+            return String.Equals(identifier, "All", StringComparison.OrdinalIgnoreCase) || 
+                    String.Equals(identifier, _Identifier, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

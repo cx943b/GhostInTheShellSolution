@@ -27,74 +27,74 @@ namespace GhostInTheShell.Modules.Balloon
         
     internal class BalloonService : IBalloonService
     {
-        IRegionManager _regionMgr;
-        BalloonItemsControlRegion _balloonContentsRegion;
         readonly ILogger _logger;
 
+        readonly BalloonTextContentAddedEvent _balloonTextContentAddedEvent;
+        readonly BalloonImageContentAddedEvent _balloonImageContentAddedEvent;
+        readonly BalloonClearedEvent _balloonClearedEvent;
         readonly BalloonPositionChangeEvent _balloonPositionChangeEvent;
-        readonly List<BalloonContentModelBase> _lstContent = new List<BalloonContentModelBase>();
-        readonly IDictionary<string, BalloonItemsControlRegion> _dicBalloonItemsCtrlRegion = new Dictionary<string, BalloonItemsControlRegion>();
-        readonly IEnumerable<string> _charNames;
 
-        public BalloonService(ILogger<BalloonService> logger, IEventAggregator eventAggregator, IRegionManager regionManager, ICharacterNameService charNameSvc)
+        public BalloonService(ILogger<BalloonService> logger, IEventAggregator eventAggregator)
         {
             _logger = logger;
-            _regionMgr = regionManager;
 
-            if(charNameSvc is null)
-                throw new ArgumentNullException(nameof(charNameSvc));
-
-            _charNames = charNameSvc.CharacterNames;
-
+            _balloonTextContentAddedEvent = eventAggregator.GetEvent<BalloonTextContentAddedEvent>();
+            _balloonImageContentAddedEvent = eventAggregator.GetEvent<BalloonImageContentAddedEvent>();
+            _balloonClearedEvent = eventAggregator.GetEvent<BalloonClearedEvent>();
             _balloonPositionChangeEvent = eventAggregator.GetEvent<BalloonPositionChangeEvent>();
         }
 
-        public void InitializeRegions()
-        {
-
-        }
 
         public void AddText(string charName, string text)
         {
-            if (_balloonContentsRegion is null)
-                _balloonContentsRegion = (BalloonItemsControlRegion)_regionMgr.Regions[WellknownRegionNames.BalloonContentControlRegion];
-
-            if (string.IsNullOrEmpty(text))
+            if(String.IsNullOrEmpty(charName))
+            {
+                _logger.Log(LogLevel.Warning, $"NullOrEmpty: {nameof(charName)}");
+                return;
+            }
+            else if(String.IsNullOrEmpty(text))
             {
                 _logger.Log(LogLevel.Warning, $"NullOrEmpty: {nameof(text)}");
                 return;
             }
 
-            BalloonTextConetntModel textContent = new BalloonTextConetntModel();
-            textContent.Text = text;
-
-            _balloonContentsRegion.Add(textContent);
-            _lstContent.Add(textContent);
+            _balloonTextContentAddedEvent.Publish(new BalloonTextContentAddedEventArgs(charName, text));
         }
         public void AddImage(string charName, Uri imgUri, Size imgSize)
         {
-            if (_balloonContentsRegion is null)
-                _balloonContentsRegion = (BalloonItemsControlRegion)_regionMgr.Regions[WellknownRegionNames.BalloonContentControlRegion];
-
-            if(imgUri is null)
+            if (String.IsNullOrEmpty(charName))
+            {
+                _logger.Log(LogLevel.Warning, $"NullOrEmpty: {nameof(charName)}");
+                return;
+            }
+            else if (imgUri is null)
             {
                 _logger.Log(LogLevel.Warning, $"NullOrEmpty: {nameof(imgUri)}");
                 return;
             }
 
-            BalloonImageContentModel imgContent = new BalloonImageContentModel();
-            imgContent.ImageUri = imgUri;
-            imgContent.ImageSize = imgSize;
-
-            _balloonContentsRegion.Add(imgContent);
-            _lstContent.Add(imgContent);
+            _balloonImageContentAddedEvent.Publish(new BalloonImageContentAddedEventArgs(charName, imgUri, imgSize));
         }
 
-        public void ChangePosition(string charName, Point pos) => _balloonPositionChangeEvent.Publish(new BalloonPositionChangeEventArgs(charName, pos));
-        public void Clear()
+        public void ChangePosition(string charName, Point pos)
         {
-            _balloonContentsRegion.RemoveAll();
-            _lstContent.Clear();
+            if (String.IsNullOrEmpty(charName))
+            {
+                _logger.Log(LogLevel.Warning, $"NullOrEmpty: {nameof(charName)}");
+                return;
+            }
+
+            _balloonPositionChangeEvent.Publish(new BalloonPositionChangeEventArgs(charName, pos));
+        }
+        public void Clear(string charName)
+        {
+            if (String.IsNullOrEmpty(charName))
+            {
+                _logger.Log(LogLevel.Warning, $"NullOrEmpty: {nameof(charName)}");
+                return;
+            }
+
+            _balloonClearedEvent.Publish(new BalloonClearedEventArgs(charName));
         }
     }
 }

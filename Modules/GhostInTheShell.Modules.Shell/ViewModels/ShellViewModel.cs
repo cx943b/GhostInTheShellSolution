@@ -63,7 +63,7 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
 
         private void onShellSizeChanged(ShellSizeChangedEventArgs e)
         {
-            if (!base.IsTarget(e.ShellName))
+            if (!base.IsTarget(e.Identifier))
                 return;
 
             System.Drawing.Size size = e.Size;
@@ -81,7 +81,7 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
 
         private void onMaterialCollectionChanged(MaterialCollectionChangedEventArgs e)
         {
-            if (!base.IsTarget(e.ShellName))
+            if (!base.IsTarget(e.Identifier))
                 return;
 
             if (_ImageSource is not null)

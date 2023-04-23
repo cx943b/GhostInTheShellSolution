@@ -46,7 +46,7 @@ namespace GhostInTheShell
             _matCollChangeEvent = eventAggregator.GetEvent<MaterialCollectionChangedEvent>();
 
             _lstSubToken.Add(eventAggregator.GetEvent<PrintWordScriptCommandEvent>().Subscribe(onPrintWordScriptCommandExecute,ThreadOption.UIThread));
-            _lstSubToken.Add(eventAggregator.GetEvent<ClearWordsScriptCommandEvent>().Subscribe(() => _ballSvc.Clear(), ThreadOption.UIThread));
+            _lstSubToken.Add(eventAggregator.GetEvent<ClearWordsScriptCommandEvent>().Subscribe(() => _ballSvc.Clear("All"), ThreadOption.UIThread));
 
             //_lstSubToken.Add(eventAggregator.GetEvent<ShellChangeScriptCommandEvent>().Subscribe(onShellChangeScriptCommandExecute));
             _lstSubToken.Add(eventAggregator.GetEvent<ShellPositionChangedEvent>().Subscribe(onShellPositionChanged));
@@ -70,7 +70,7 @@ namespace GhostInTheShell
 
         private void onPrintWordScriptCommandExecute(PrintWordScriptCommandEventArgs e)
         {
-            _ballSvc.AddText(e.PrintWord);
+            _ballSvc.AddText("All", e.PrintWord);
         }
         //private async void onShellChangeScriptCommandExecute(ShellChangeScriptCommandEventArgs e)
         //{

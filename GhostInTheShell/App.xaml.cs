@@ -37,6 +37,10 @@ namespace GhostInTheShell
 
             var regionMgr = Container.Resolve<IRegionManager>();
             regionMgr.RegisterViewWithRegion<MainView>(WellknownRegionNames.MainViewRegion);
+
+            var ballSvc = Container.Resolve<IBalloonService>();
+            ballSvc.AddText(CharacterNames.Kaori, "ffff");
+
         }
 
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
@@ -77,14 +81,6 @@ namespace GhostInTheShell
             });
             containerRegistry.Register(typeof(ILogger<>), typeof(Logger<>));
             containerRegistry.RegisterSingleton<ICentralProcessingService, CentralProcessingService>();
-        }
-
-        protected override void ConfigureRegionAdapterMappings(RegionAdapterMappings regionAdapterMappings)
-        {
-            base.ConfigureRegionAdapterMappings(regionAdapterMappings);
-
-            var adapter = Container.Resolve<BalloonItemsControlAdapter>();
-            regionAdapterMappings.RegisterMapping<BalloonItemsControl>(adapter);
         }
     }
 }

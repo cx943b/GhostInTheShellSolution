@@ -1,10 +1,25 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:localCtrl="clr-namespace:GhostInTheShell.Modules.Balloon.Controls">
+                    xmlns:localCtrl="clr-namespace:GhostInTheShell.Modules.Balloon.Controls"
+                    xmlns:localModel="clr-namespace:GhostInTheShell.Modules.Balloon.Models">
 
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="pack://application:,,,/GhostInTheShell.Modules.Balloon;Component/Themes/BalloonTail.xaml"/>
+        <ResourceDictionary Source="pack://application:,,,/GhostInTheShell.Modules.Balloon;Component/Themes/BalloonContentControl.xaml"/>
     </ResourceDictionary.MergedDictionaries>
+
+    <localCtrl:BalloonItemsControlDataTemplateSelector x:Key="contentTemplateSelector">
+        <localCtrl:BalloonItemsControlDataTemplateSelector.ImageDataTemplate>
+            <DataTemplate DataType="{x:Type localModel:BalloonImageContentModel}">
+                <localCtrl:BalloonImageContentControl />
+            </DataTemplate>
+        </localCtrl:BalloonItemsControlDataTemplateSelector.ImageDataTemplate>
+        <localCtrl:BalloonItemsControlDataTemplateSelector.TextDataTemplate>
+            <DataTemplate DataType="{x:Type localModel:BalloonTextConetntModel}">
+                <localCtrl:BalloonTextContentControl />
+            </DataTemplate>
+        </localCtrl:BalloonItemsControlDataTemplateSelector.TextDataTemplate>
+    </localCtrl:BalloonItemsControlDataTemplateSelector>
 
     <Style TargetType="{x:Type localCtrl:BalloonControl}">
         <Setter Property="Template">
@@ -26,7 +41,8 @@
                         </Grid.ColumnDefinitions>
                         
                         <Border CornerRadius="5" Padding="10" Grid.Row="1" Grid.Column="1" Background="Gray" BorderThickness="1" BorderBrush="Black">
-                            <localCtrl:BalloonContentPresenter />
+                            <localCtrl:BalloonItemsControl ItemsSource="{Binding Contents, Mode=OneTime}"
+                                                           ItemTemplateSelector="{StaticResource contentTemplateSelector}"/>
                         </Border>
 
                         <localCtrl:BalloonTail x:Name="PART_TailLeft" Grid.Row="1" Grid.Column="0" TailDirection="Left"

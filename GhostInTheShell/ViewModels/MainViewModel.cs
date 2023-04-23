@@ -38,7 +38,6 @@ namespace GhostInTheShell.ViewModels
         readonly DelegateCommand<BalloonTailDirection?> _ChangeBalloonTailDirectionCommand;
 
         readonly ICentralProcessingService _centralSvc;
-        readonly BalloonTailDirectionChangeEvent _balloonTailDirectionChangeEvent;
 
         public ICommand AddTextCommand => _AddTextCommand;
         public ICommand AddImageCommand => _AddImageCommand;
@@ -53,11 +52,12 @@ namespace GhostInTheShell.ViewModels
             _AddImageCommand = new DelegateCommand(onAddImageExecute);
             _ClearCommand = new DelegateCommand(onClearCommand);
             _ChangeBalloonTailDirectionCommand = new DelegateCommand<BalloonTailDirection?>(onBalloonTailDireactionChangeExecute);
-
-            _balloonTailDirectionChangeEvent = eventAggregator.GetEvent<BalloonTailDirectionChangeEvent>();
         }
 
-        private void onBalloonTailDireactionChangeExecute(BalloonTailDirection? tailDirection) => _balloonTailDirectionChangeEvent.Publish(tailDirection);
+        private void onBalloonTailDireactionChangeExecute(BalloonTailDirection? tailDirection)
+        {
+
+        }
 
         private void onAddTextExecute()
         {

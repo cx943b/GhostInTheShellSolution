@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GhostInTheShell.Modules.Balloon.Models;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -9,6 +10,28 @@ using System.Windows.Controls;
 
 namespace GhostInTheShell.Modules.Balloon.Controls
 {
+    internal class BalloonItemsControlDataTemplateSelector : DataTemplateSelector
+    {
+        public DataTemplate? ImageDataTemplate { get; set; }
+        public DataTemplate? TextDataTemplate { get; set; }
+
+        public override DataTemplate? SelectTemplate(object item, DependencyObject container)
+        {
+            if(item is null)
+                throw new ArgumentNullException(nameof(item));
+
+            if(item is BalloonImageContentModel)
+            {
+                return ImageDataTemplate;
+            }
+            else if(item is BalloonTextConetntModel)
+            {
+                return TextDataTemplate;
+            }
+
+            throw new InvalidCastException($"InvalidType: {nameof(item)}");
+        }
+    }
 
     internal class BalloonContentPresenter : ContentPresenter
     {

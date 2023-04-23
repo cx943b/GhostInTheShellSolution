@@ -27,7 +27,7 @@ namespace GhostInTheShell.Modules.Balloon.Views
     /// </summary>
     internal partial class BalloonView : UserControl, IDialogAware
     {
-        public BalloonView(IConfiguration config)
+        public BalloonView()
         {
             InitializeComponent();
 
