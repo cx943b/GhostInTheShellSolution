@@ -9,7 +9,7 @@ using Prism.Mvvm;
 
 namespace GhostInTheShell.Modules.Balloon.Models
 {
-    internal abstract class BalloonContentModelBase : BindableBase
+    internal abstract class BalloonContentModelBase : BindableBase, IBalloonContent
     {
         Point _Position;
         double _Width, _Height;
@@ -39,8 +39,7 @@ namespace GhostInTheShell.Modules.Balloon.Models
         public double Right => _Position.X + _Width;
         public double Bottom => _Position.Y + _Height;
     }
-
-    internal class BalloonTextConetntModel : BalloonContentModelBase
+    internal class BalloonTextConetntModel : BalloonContentModelBase, IBalloonTextContent
     {
         string? _Text;
 
@@ -50,7 +49,7 @@ namespace GhostInTheShell.Modules.Balloon.Models
             set => SetProperty(ref _Text, value);
         }
     }
-    internal class BalloonImageContentModel : BalloonContentModelBase
+    internal class BalloonImageContentModel : BalloonContentModelBase, IBalloonImageContent
     {
         Uri? _ImageUri;
         Size _ImageSize;

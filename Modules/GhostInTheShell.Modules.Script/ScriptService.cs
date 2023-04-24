@@ -26,10 +26,11 @@ namespace GhostInTheShell.Modules.Script
         const char ParamStringOpenChar = '[';
         const char ParamStringCloseChar = ']';
 
-        string? _currentIdentifier;
+        string _currentIdentifier = "All";
 
         readonly ILogger _logger;
         readonly IShellService _charClientSvc;
+        readonly ICharacterNameService _charNameSvc;
 
         readonly ClearWordsScriptCommandEvent _clearWordsScriptCommandEvent;
         readonly PrintWordScriptCommandEvent _printWordScriptCommandEvent;
@@ -46,10 +47,11 @@ namespace GhostInTheShell.Modules.Script
         public bool IsRunning { get; private set; }
         public int ScriptCommandPumpInterval { get; private set; } = 30;
 
-        public ScriptService(ILogger<ScriptService> logger, IEventAggregator eventAggregator, IShellService charClientSvc)
+        public ScriptService(ILogger<ScriptService> logger, IEventAggregator eventAggregator, IShellService charClientSvc, ICharacterNameService charNameSvc)
         {
             _logger = logger;
             _charClientSvc = charClientSvc ?? throw new NullReferenceException(nameof(charClientSvc));
+            _charNameSvc = charNameSvc;
 
             _clearWordsScriptCommandEvent = eventAggregator.GetEvent<ClearWordsScriptCommandEvent>();
             _printWordScriptCommandEvent = eventAggregator.GetEvent<PrintWordScriptCommandEvent>();
@@ -121,7 +123,19 @@ namespace GhostInTheShell.Modules.Script
                         }
                     case ShellChangeScriptCommand shellChangeScriptCmd:
                         {
-                            _materialCollectionChangedEvent.Publish(new MaterialCollectionChangedEventArgs(_currentIdentifier, _dicImageStream[shellChangeScriptCmd.ImageIndex]));
+                            if(String.Equals(_currentIdentifier, "All", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // ToDo: 
+                                foreach(string charName in _charNameSvc.CharacterNames)
+                                {
+                                    _materialCollectionChangedEvent.Publish(new MaterialCollectionChangedEventArgs(charName, _dicImageStream[shellChangeScriptCmd.ImageIndex]));
+                                }
+                            }
+                            else
+                            {
+                                _materialCollectionChangedEvent.Publish(new MaterialCollectionChangedEventArgs(_currentIdentifier, _dicImageStream[shellChangeScriptCmd.ImageIndex]));
+                            }
+                            
                             //_shellChangeScriptCommandEvent.Publish(new ShellChangeScriptCommandEventArgs(shellChangeScriptCmd.HeadLabel, shellChangeScriptCmd.EyeLabel, shellChangeScriptCmd.FaceLabel));
                             break;
                         }

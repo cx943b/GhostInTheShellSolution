@@ -59,7 +59,13 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
                 onShellSizeChanged(imgSize);
         }
 
+        protected override bool IsTarget(string identifier)
+        {
+            if (String.IsNullOrEmpty(identifier))
+                throw new ArgumentNullException(nameof(identifier));
 
+            return String.Equals(identifier, this.Identifier, StringComparison.OrdinalIgnoreCase);
+        }
 
         private void onShellSizeChanged(ShellSizeChangedEventArgs e)
         {
@@ -81,7 +87,7 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
 
         private void onMaterialCollectionChanged(MaterialCollectionChangedEventArgs e)
         {
-            if (!base.IsTarget(e.Identifier))
+            if (!this.IsTarget(e.Identifier))
                 return;
 
             if (_ImageSource is not null)
@@ -89,6 +95,8 @@ namespace GhostInTheShell.Modules.Shell.ViewModels
 
             if (e.Stream is not null)
             {
+                e.Stream.Position = 0;
+
                 BitmapImage bi = new BitmapImage();
                 bi.BeginInit();
                 bi.StreamSource = e.Stream;

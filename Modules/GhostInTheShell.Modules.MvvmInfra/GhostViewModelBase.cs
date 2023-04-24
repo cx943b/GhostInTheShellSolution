@@ -9,14 +9,9 @@ using System.Threading.Tasks;
 
 namespace GhostInTheShell.Modules.MvvmInfra
 {
-    public interface IGhostIdentifier
-    {
-        string Identifier { get; }
-        event GhostIdentifierChangedEventHandler IdentifierChanged;
-    }
     public abstract class GhostViewModelBase : BindableBase, IDialogAware, IGhostIdentifier
     {
-        string _Identifier;
+        string _Identifier = String.Empty;
         double _Left = 400, _Top;
         double _Width, _Height;
 

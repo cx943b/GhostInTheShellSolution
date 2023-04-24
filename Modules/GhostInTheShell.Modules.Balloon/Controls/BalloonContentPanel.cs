@@ -11,8 +11,6 @@ namespace GhostInTheShell.Modules.Balloon.Controls
 {
     internal class BalloonContentPanel : Panel
     {
-        
-
         const int ImageContentVerticalMargin = 6;
 
         protected override Size ArrangeOverride(Size finalSize)
@@ -23,7 +21,7 @@ namespace GhostInTheShell.Modules.Balloon.Controls
 
             foreach (ContentPresenter child in Children.Cast<ContentPresenter>())
             {
-                if (child.Content is BalloonTextContentControl)
+                if (child.Content is IBalloonTextContent)
                 {
                     if (currentPos.X + child.DesiredSize.Width > finalSize.Width)
                     {
@@ -37,7 +35,7 @@ namespace GhostInTheShell.Modules.Balloon.Controls
                     currentPos.X += child.DesiredSize.Width;
                     lineMaxHeight = Math.Max(lineMaxHeight, child.DesiredSize.Height);
                 }
-                else if (child.Content is BalloonImageContentControl)
+                else if (child.Content is IBalloonImageContent)
                 {
                     currentPos.X = 0;
                     currentPos.Y += lineMaxHeight + ImageContentVerticalMargin;
@@ -65,7 +63,7 @@ namespace GhostInTheShell.Modules.Balloon.Controls
             {
                 child.Measure(availableSize);
 
-                if (child.Content is BalloonTextContentControl)
+                if (child.Content is IBalloonTextContent)
                 {
                     if (currentPos.X + child.DesiredSize.Width > availableSize.Width)
                     {
@@ -76,7 +74,7 @@ namespace GhostInTheShell.Modules.Balloon.Controls
                     currentPos.X += child.DesiredSize.Width;
                     lineMaxHeight = Math.Max(lineMaxHeight, child.DesiredSize.Height);
                 }
-                else if (child.Content is BalloonImageContentControl)
+                else if (child.Content is IBalloonImageContent)
                 {
                     currentPos.X = 0;
                     currentPos.Y += lineMaxHeight + ImageContentVerticalMargin;

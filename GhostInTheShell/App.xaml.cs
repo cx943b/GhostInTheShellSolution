@@ -39,7 +39,7 @@ namespace GhostInTheShell
             regionMgr.RegisterViewWithRegion<MainView>(WellknownRegionNames.MainViewRegion);
 
             var ballSvc = Container.Resolve<IBalloonService>();
-            ballSvc.AddText(CharacterNames.Kaori, "ffff");
+            ballSvc.AddText("All", "ffff");
 
         }
 
