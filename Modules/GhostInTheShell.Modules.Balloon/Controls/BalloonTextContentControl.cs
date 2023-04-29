@@ -72,6 +72,7 @@ namespace GhostInTheShell.Modules.Balloon.Controls
         public static readonly DependencyProperty FontStyleProperty = TextElement.FontStyleProperty.AddOwner(typeof(BalloonTextContentControl));
         public static readonly DependencyProperty ForegroundProperty = TextElement.ForegroundProperty.AddOwner(typeof(BalloonTextContentControl));
 
+        static BalloonTextContentControl() => DefaultStyleKeyProperty.OverrideMetadata(typeof(BalloonTextContentControl), new FrameworkPropertyMetadata(typeof(BalloonTextContentControl)));
         protected override void OnRender(DrawingContext dc)
         {
             dc.DrawText(_ft, new Point());

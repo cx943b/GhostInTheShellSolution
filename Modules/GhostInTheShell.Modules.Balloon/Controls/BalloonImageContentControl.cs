@@ -33,6 +33,8 @@ namespace GhostInTheShell.Modules.Balloon.Controls
             set { SetValue(ImageUriProperty, value); }
         }
 
+        static BalloonImageContentControl() => DefaultStyleKeyProperty.OverrideMetadata(typeof(BalloonImageContentControl), new FrameworkPropertyMetadata(typeof(BalloonImageContentControl)));
+
         protected virtual void OnImageUriChanged(Uri newUri)
         {
             if(newUri is null)
