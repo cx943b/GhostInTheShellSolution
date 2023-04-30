@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="ScriptSample"
+    targetNamespace="http://tempuri.org/ScriptSample.xsd"
+    elementFormDefault="qualified"
+    xmlns="http://tempuri.org/ScriptSample.xsd"
+    xmlns:mstns="http://tempuri.org/ScriptSample.xsd"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="Talk">
+		
+	</xs:element>
+</xs:schema>

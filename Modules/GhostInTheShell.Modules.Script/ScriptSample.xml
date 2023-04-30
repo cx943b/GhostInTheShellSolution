@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<Scripts>
+	<Script>
+		<ChangeTalkerIndexCommand TalkerIndex="0"/>
+		<ChangeShellCommand HeadLabel="부끄럼0" EyeLabel="중간-무광" FaceLabel="웃음"/>
+		<PrintTextCommand>뭐하냐??</PrintTextCommand>
+		<WaitCommand Interval="300"/>
+		<PrintImageCommang Uri="https://i3.ruliweb.com/img/23/02/27/18690c442b8576058.jpg" Width="80" Height="30"/>
+		<ClearCommand />
+	</Script>
+</Scripts>
