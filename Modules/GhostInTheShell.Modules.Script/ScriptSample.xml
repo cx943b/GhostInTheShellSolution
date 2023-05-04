@@ -1,12 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 
-<Scripts>
-	<Script>
-		<ChangeTalkerIndexCommand TalkerIndex="0"/>
-		<ChangeShellCommand HeadLabel="부끄럼0" EyeLabel="중간-무광" FaceLabel="웃음"/>
-		<PrintTextCommand>뭐하냐??</PrintTextCommand>
-		<WaitCommand Interval="300"/>
-		<PrintImageCommang Uri="https://i3.ruliweb.com/img/23/02/27/18690c442b8576058.jpg" Width="80" Height="30"/>
-		<ClearCommand />
+<Scripts xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xmlns="http://tempuri.org/ScriptSample.xsd"
+		 xsi="ScriptSample.xsd">
+	
+	<Script xsi:type="ScriptType" ScriptLabel="{7593B168-2051-48F1-B575-B90F19372DA6}">
+		<ScriptCommand xsi:type="ChangeShellCommandType" TalkerIndex="0" HeadLabel="부끄럼0" EyeLabel="중간-무광" FaceLabel="웃음"/>
+		<ScriptCommand xsi:type="PrintTextCommandType" TalkerIndex="0">뭐 하냐?</ScriptCommand>
+		<ScriptCommand xsi:type="WaitCommandType" TalkerIndex="0" Interval="1000"/>
+		<ScriptCommand xsi:type="PrintImageCommandType" TalkerIndex="0" Uri="https://i3.ruliweb.com/img/23/02/27/18690c442b8576058.jpg" Width="80" Height="30"/>
+		<ScriptCommand xsi:type="ClearCommandType" TalkerIndex="0"/>
+		<ScriptCommand xsi:type="NextReserveCommandType" ScriptLabel="{BBD4248D-2693-4CB9-B873-04FBA6703967}"/>
+	</Script>
+	<Script xsi:type="ScriptType" ScriptLabel="{BBD4248D-2693-4CB9-B873-04FBA6703967}">
+		<ScriptCommand xsi:type="ChangeShellCommandType" TalkerIndex="1" HeadLabel="부끄럼0" EyeLabel="중간-무광" FaceLabel="무표정"/>
+		<ScriptCommand xsi:type="PrintTextCommandType" TalkerIndex="1">안 들리나??</ScriptCommand>
 	</Script>
 </Scripts>

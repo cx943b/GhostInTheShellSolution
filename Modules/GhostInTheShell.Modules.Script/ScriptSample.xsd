@@ -5,7 +5,68 @@
     xmlns="http://tempuri.org/ScriptSample.xsd"
     xmlns:mstns="http://tempuri.org/ScriptSample.xsd"
     xmlns:xs="http://www.w3.org/2001/XMLSchema">
-	<xs:element name="Talk">
-		
+
+	<xs:complexType name="ScriptCommandBaseType" abstract="true">
+		<xs:attribute name="TalkerIndex" type="xs:integer"/>
+	</xs:complexType>
+	
+	<xs:complexType name="ChangeShellCommandType">
+		<xs:complexContent>
+			<xs:extension base="mstns:ScriptCommandBaseType">
+				<xs:attribute name="HeadLabel" type="xs:string"/>
+				<xs:attribute name="EyeLabel" type="xs:string"/>
+				<xs:attribute name="FaceLabel" type="xs:string"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PrintTextCommandType">
+		<xs:complexContent>
+			<xs:extension base="mstns:ScriptCommandBaseType">
+				<xs:sequence>
+					<xs:any minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PrintImageCommandType">
+		<xs:complexContent>
+			<xs:extension base="mstns:ScriptCommandBaseType">
+				<xs:attribute name="Uri" type="xs:anyURI"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="WaitCommandType">
+		<xs:complexContent>
+			<xs:extension base="mstns:ScriptCommandBaseType">
+				<xs:attribute name="Interval" type="xs:integer"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ClearCommandType">
+		<xs:complexContent>
+			<xs:extension base="mstns:ScriptCommandBaseType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="NextReserveCommandType">
+		<xs:complexContent>
+			<xs:extension base="mstns:ScriptCommandBaseType">
+				<xs:attribute name="ScriptLabel" type="xs:string"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="ScriptType">
+		<xs:sequence>
+			<xs:element name="ScriptCommand" type="mstns:ScriptCommandBaseType" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="ScriptLabel" type="xs:string"/>
+	</xs:complexType>
+	
+	<xs:element name="Scripts">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Script" type="mstns:ScriptType" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
 	</xs:element>
 </xs:schema>
